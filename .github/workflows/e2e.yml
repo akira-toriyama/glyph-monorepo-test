@@ -796,14 +796,17 @@ jobs:
           O="$RUNNER_TEMP/wb2"; run_glyph "$O.json" "$O.err" bump --since-tag=travel/onsen/v0.0.0 --json --repo "$REPO"
           assert_rc wb-onsen 0
           assert_eq wb-onsen-lines "$(jq -r '[.packages[] | "\(.path):\(.level):\(.next // "-")"] | join("|")' "$O.json")" 'travel/onsen:minor:v0.1.0'
-          # The dry run of a release selected by one tag plans one line. Its
-          # `.action` is deliberately unasserted here: this job holds a read
-          # token, and GitHub shows drafts to push access only, so
-          # create-vs-update would be a statement about the token. Tier
-          # `drafts` holds write and asserts it there.
-          O="$RUNNER_TEMP/wb3"; run_glyph "$O.json" "$O.err" release --dry-run --json --since-tag=camp/v0.0.0 --repo "$REPO"
-          assert_rc wb-camp-release 0
-          assert_eq wb-camp-plan "$(jq -r '[.packages[] | "\(.path):\(.level):\(.tag // "-")"] | join("|")' "$O.json")" 'camp:patch:camp/v0.0.1'
+          # `bump`, not `release --dry-run`. The release path consults the
+          # PUBLISHED floor over the API before it plans anything, and that is
+          # a LIVE fact — no clone-side tag pruning can freeze it. The moment
+          # camp carries a published release above v0.0.1 this probe refuses at
+          # exit 4 for a reason that has nothing to do with the claim it is
+          # here to make, and the claim (one tag selects one line) is bump's
+          # answer anyway. The floor gets its own arm below, where the refusal
+          # IS the claim.
+          O="$RUNNER_TEMP/wb3"; run_glyph "$O.json" "$O.err" bump --since-tag=camp/v0.0.0 --json --repo "$REPO"
+          assert_rc wb-camp 0
+          assert_eq wb-camp-lines "$(jq -r '[.packages[] | "\(.path):\(.level):\(.next // "-")"] | join("|")' "$O.json")" 'camp:patch:v0.0.1'
 
       - name: "(c) preview renders one verdict per touched line, and never a line the pull did not touch"
         if: ${{ !cancelled() }}
