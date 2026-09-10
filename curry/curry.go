@@ -19,7 +19,7 @@ func Recipe() []Ingredient {
 		{Name: "carrot", Grams: 200, Prep: "rolling-cut"},
 		{Name: "sweet potato", Grams: 300, Prep: "3cm cubes"},
 		{Name: "water", Grams: 800},
-		{Name: "roux", Grams: 100, Prep: "broken into squares"},
+		{Name: "roux", Grams: 120, Prep: "broken into squares"},
 	}
 }
 
