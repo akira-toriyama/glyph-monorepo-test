@@ -8,18 +8,24 @@ The property the harness exists to prove: a pull request that touches `haiku/`
 moves **haiku's** version and nothing else, and a squash merge never loses which
 of the pull's commits touched which module.
 
-| module | tag line | what a change looks like |
+| module | tag line | what its history shows |
 |---|---|---|
-| `haiku/` | `haiku/vX.Y.Z` | a new season is a `^` minor; a typo fix is a `~` patch |
-| `curry/` | `curry/vX.Y.Z` | a new ingredient is a `^` minor; a swapped one is a `~` patch |
-| `travel/` | `travel/vX.Y.Z` | a new stop is a `^` minor; a reordered one is a `~` patch |
-| `travel/onsen/` | `travel/onsen/vX.Y.Z` | **nested** in `travel/`: a new bath moves onsen alone — the longest declared prefix wins |
-| `camp/` | `camp/vX.Y.Z` | a new item is a `^` minor; a swapped one is a `~` patch |
+| `haiku/` | `haiku/vX.Y.Z` | `%` is the only door to 1.0.0, and `!` takes the major once a line is 1.x — three majors so far |
+| `curry/` | `curry/vX.Y.Z` | a line that grew on `^` and `~` alone before it called 1.0 |
+| `travel/` | `travel/vX.Y.Z` | `!` on a 0.x line steps the **minor**: breaking things early cannot claim a stable major |
+| `travel/onsen/` | `travel/onsen/vX.Y.Z` | **nested** in `travel/`: a change here moves onsen alone — the longest declared prefix wins. Both lines promoted to 1.0.0 in the same merge, each on its own commits |
+| `camp/` | `camp/vX.Y.Z` | a line still in 0.x four rounds in, breaking changes included |
 
 Tags follow the Go multi-module convention (`<dir>/vX.Y.Z`), so each module is
-also fetchable with `go get` at its own version. Nothing is built or published
-beyond the draft releases — the modules are the smallest thing that has a
-version.
+also fetchable with `go get` at its own version. Nothing is built and nothing is
+uploaded: publishing a line's draft is what cuts that line's tag, and the module
+at that tag is the whole artifact.
+
+A release page here carries three parts, and only the middle one is glyph's:
+prose written by hand **above** the sentinel comment, the generated sections
+below it (one per sigil class, in `[[note.sections]]` order), and the caller's
+`install-notes` footer under a `---`. glyph rewrites everything below the
+sentinel on every push and never touches what is above it.
 
 Like [glyph-test](https://github.com/akira-toriyama/glyph-test), real pull
 requests, releases and tags here are fair game, and its history and tags are
@@ -56,8 +62,13 @@ Frozen coordinates the e2e reads (never rewrite them):
 - #10 — a `^` under `travel/` and a `~` under `camp/` in one squash; `travel/onsen` is not mentioned.
 - #11 — a `^` under `travel/onsen/` alone: the nested line moves, its parent does not.
 - merge commit of #11 (`380db9d`): every literal in the walk tier was measured there.
+- the **tag landscape** as of that commit. glyph resolves a line's base with `git tag --list` and never consults reachability, so a tag cut afterwards becomes the base of a walk that starts before it and every literal collapses to `none`. The walk tier therefore clones and deletes the tags no descendant could have shown it, and asserts the surviving list as a literal (measured 2026-09-11: with `haiku/v0.2.0` and `travel/v0.1.0` planted on a descendant, arm (a) answered `haiku:v0.2.0:none|travel:v0.1.0:none`).
 
 Measured by hand rather than in e2e, because each consumes a tag or a version:
 
 - publish one line's draft, merge again: the published line gets a fresh draft at the next version and every other line's draft is updated under the same id (2026-09-10, `haiku/v0.1.0` then `curry/v0.0.1`).
 - GitHub's **Latest** badge lands on whichever line was published last; glyph never sets `make_latest`.
+- four rounds of twenty commits, three of them published (2026-09-11): 17 published releases across the five lines, from `camp/v0.1.0` to `haiku/v3.0.0`, and one standing draft per line on top. Each round was a single squash merge, and every line stepped on its own commits alone.
+- a hand region written **above** the sentinel survives a rewrite: written into all five standing drafts, then read back unchanged after `e2e.yml`'s drafts tier had rewritten every one of them (2026-09-11, run 34501469251).
+- the published floor is **per line**: at the frozen coordinate `release --dry-run --since-tag=camp/v0.0.0` refuses at exit 4 naming camp's own latest published release, never another line's. That is now the walk tier's arm (b2).
+- `e2e.yml`'s drafts tier runs `release` with no `--footer-file`, so a dispatch leaves every draft without the `install-notes` block until the next push to `main` writes it back (2026-09-11). Publish after a push, never straight after a dispatch.

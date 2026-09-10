@@ -808,6 +808,26 @@ jobs:
           assert_rc wb-camp 0
           assert_eq wb-camp-lines "$(jq -r '[.packages[] | "\(.path):\(.level):\(.next // "-")"] | join("|")' "$O.json")" 'camp:patch:v0.0.1'
 
+      - name: "(b2) the published floor is per line, and it refuses this line alone"
+        if: ${{ !cancelled() }}
+        working-directory: repo
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/w"
+          # The live half of (b), and the reason (b) itself no longer uses
+          # `release`. camp carries published releases far past v0.0.1, so a
+          # release selected by camp/v0.0.0 plans a version the floor already
+          # holds and must refuse — with camp's own floor, never another line's.
+          # The refusal is read out of `.error.message`, never off the raw
+          # stream. The version in that message is camp's CURRENT floor and
+          # moves with every camp release, so the match stops before it.
+          O="$RUNNER_TEMP/wb4"; run_glyph "$O.json" "$O.err" release --dry-run --json --since-tag=camp/v0.0.0 --repo "$REPO"
+          assert_rc wb-floor 4
+          assert_envelope wb-floor-envelope "$O.err" 4
+          assert_says wb-floor-mechanism "$O.err" 'computed version camp/v0.0.1 is not greater than the latest published release camp/v'
+          assert_empty_stdout wb-floor-stdout "$O.json"
+
       - name: "(c) preview renders one verdict per touched line, and never a line the pull did not touch"
         if: ${{ !cancelled() }}
         working-directory: repo
@@ -888,6 +908,13 @@ jobs:
   # new id would mean a delete-and-create the ratified "never a second draft"
   # forbids), or the run leaves anything behind that release.yml's read-back
   # would not accept.
+  #
+  # One thing this tier does NOT leave as release.yml wrote it: it runs
+  # `release` with no `--footer-file`, so every draft it converges comes back
+  # without the Install block the caller passes, until the next push to main
+  # puts it back. Measured 2026-09-11. Left as a fact rather than mechanised:
+  # duplicating the caller's footer here would give one string two homes, and
+  # the read-back release.yml runs does not assert it either.
   #
   # Every planted draft carries a tag no line will ever cut (v0.0.9 is bare;
   # camp/v9.9.9 is absurd), so a run that dies mid-way leaves nothing a human
