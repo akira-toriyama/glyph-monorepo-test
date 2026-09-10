@@ -14,7 +14,7 @@ const (
 // the two in step.
 var category = map[string]Category{
 	"tent":         Shelter,
-	"sleeping mat": Shelter,
+	"sleeping mat": Sleep,
 	"sleeping bag": Sleep,
 	"gas stove":    Kitchen,
 	"water filter": Kitchen,

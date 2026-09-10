@@ -19,3 +19,10 @@ func TestInReadsTheKitchenInListOrder(t *testing.T) {
 		t.Fatalf("In(Kitchen) = %q, want %q", got, want)
 	}
 }
+
+func TestTheMatIsFiledWithTheBag(t *testing.T) {
+	want := []string{"sleeping mat", "sleeping bag"}
+	if got := In(Sleep); !slices.Equal(got, want) {
+		t.Fatalf("In(Sleep) = %q, want %q", got, want)
+	}
+}
