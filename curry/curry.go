@@ -5,5 +5,5 @@ package curry
 
 // Ingredients is the recipe; a new ingredient lands as a minor bump of this module.
 func Ingredients() []string {
-	return []string{"onion", "carrot", "potato", "roux"}
+	return []string{"onion", "carrot", "sweet potato", "roux"}
 }
