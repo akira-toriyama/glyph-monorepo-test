@@ -5,6 +5,7 @@ package camp
 var grams = map[string]int{
 	"tent":         1900,
 	"sleeping bag": 900,
+	"sleeping mat": 480,
 	"gas stove":    210,
 }
 
