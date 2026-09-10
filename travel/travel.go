@@ -40,3 +40,15 @@ func (it Itinerary) Duration() int {
 	}
 	return total
 }
+
+// SleepTowns is the town of each night in order, one entry per night: a stop
+// with four nights repeats four times and a day trip appears not at all.
+func (it Itinerary) SleepTowns() []string {
+	out := make([]string, 0, it.Duration())
+	for _, stop := range it.Stops {
+		for range stop.Nights {
+			out = append(out, stop.Name)
+		}
+	}
+	return out
+}
