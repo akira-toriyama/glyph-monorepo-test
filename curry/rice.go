@@ -11,8 +11,9 @@ type Rice struct {
 // RiceFor weighs the rice for plates, and returns the zero Rice below one —
 // the same refusal For makes. 90g of dry short-grain a plate is a scale
 // reading, not a plastic measure: a rice-cooker cup is 150g and feeds closer
-// to two. The soak is not optional: unsoaked grain steams chalky in the
-// middle whatever the water.
+// to two. The water is the SOAKED figure: grain that has drunk for half an
+// hour needs 1.1 times its dry weight, and the 1.2 on the bag assumes it goes
+// in dry.
 func RiceFor(plates int) Rice {
 	if plates < 1 {
 		return Rice{}
@@ -20,7 +21,7 @@ func RiceFor(plates int) Rice {
 	dry := 90 * plates
 	return Rice{
 		DryGrams:    dry,
-		WaterGrams:  dry * 12 / 10,
+		WaterGrams:  dry * 11 / 10,
 		SoakMinutes: 30,
 	}
 }
