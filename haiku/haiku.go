@@ -9,5 +9,5 @@ func Autumn() string {
 
 // Winter is the second season; a new season lands as a minor bump of this module.
 func Winter() string {
-	return "first winter rain—\neven the monkey seems to want\na little straw coat"
+	return "first winter rain—\neven the monkey seems to want\na little straw coat\n"
 }

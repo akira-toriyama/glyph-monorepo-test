@@ -7,3 +7,8 @@ package curry
 func Ingredients() []string {
 	return []string{"onion", "carrot", "sweet potato", "roux"}
 }
+
+// Spices is the second recipe axis; a new axis lands as a minor bump of this module.
+func Spices() []string {
+	return []string{"cumin", "coriander", "turmeric"}
+}
