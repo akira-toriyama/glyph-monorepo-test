@@ -32,3 +32,23 @@ func TestHotterLeavesTheGuideAlone(t *testing.T) {
 			bathNames(after), bathNames(before))
 	}
 }
+
+func TestWithWaterGathersOneKind(t *testing.T) {
+	if got := bathNames(WithWater("acidic sulphur")); len(got) != 1 || got[0] != "Kusatsu" {
+		t.Errorf(`WithWater("acidic sulphur") = %v, want [Kusatsu]`, got)
+	}
+	if got := bathNames(WithWater("brine")); len(got) != 0 {
+		t.Errorf(`WithWater("brine") = %v, want nothing`, got)
+	}
+}
+
+func TestWithWaterReadsPartOfThePhrase(t *testing.T) {
+	got := bathNames(WithWater("sulphur"))
+	slices.Sort(got)
+	if want := []string{"Kusatsu", "Noboribetsu"}; !slices.Equal(got, want) {
+		t.Errorf(`WithWater("sulphur") = %v, want %v`, got, want)
+	}
+	if got := bathNames(WithWater("")); len(got) != 0 {
+		t.Errorf(`WithWater("") = %v, want nothing`, got)
+	}
+}

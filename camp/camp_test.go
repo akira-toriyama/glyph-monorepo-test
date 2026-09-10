@@ -3,7 +3,7 @@ package camp
 import "testing"
 
 func TestGearHasATent(t *testing.T) {
-	if got := Gear()[0]; got != "tent" {
+	if got := Gear()[0].Name; got != "tent" {
 		t.Fatalf("first item = %q, want tent", got)
 	}
 }
@@ -13,7 +13,7 @@ func TestGearHasATent(t *testing.T) {
 func TestTheMatIsPackedUnderTheBag(t *testing.T) {
 	mat, bag := -1, -1
 	for i, item := range Gear() {
-		switch item {
+		switch item.Name {
 		case "sleeping mat":
 			mat = i
 		case "sleeping bag":
@@ -25,5 +25,13 @@ func TestTheMatIsPackedUnderTheBag(t *testing.T) {
 	}
 	if mat > bag {
 		t.Fatalf("mat at %d, bag at %d: the bag goes in under the mat", mat, bag)
+	}
+}
+
+func TestGearHandsOutACopy(t *testing.T) {
+	got := Gear()
+	got[0] = Item{Name: "banjo"}
+	if again := Gear()[0].Name; again != "tent" {
+		t.Fatalf("first item = %q after a caller overwrote its own copy, want tent", again)
 	}
 }

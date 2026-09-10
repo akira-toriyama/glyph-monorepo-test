@@ -6,26 +6,31 @@ var (
 	newYear = Poem{
 		Text:   "in my first dream\nI saw my home village —\nand I wept",
 		Author: "Kobayashi Issa",
+		Kigo:   "first dream",
 	}
 
 	spring = Poem{
 		Text:   "the spring sea\nrising and falling, rising\nand falling all day",
 		Author: "Yosa Buson",
+		Kigo:   "the spring sea",
 	}
 
 	summer = Poem{
 		Text:   "the summer grasses —\nall that remains\nof the warriors' dreams",
 		Author: "Matsuo Bashō",
+		Kigo:   "summer grasses",
 	}
 
 	autumn = Poem{
 		Text:   "an old silent pond\na frog jumps into the pond —\nsplash! silence again",
 		Author: "Matsuo Bashō",
+		Kigo:   "frog",
 	}
 
 	winter = Poem{
 		Text:   "first winter rain—\neven the monkey seems to want\na little straw coat",
 		Author: "Matsuo Bashō",
+		Kigo:   "first winter rain",
 	}
 )
 

@@ -1,6 +1,10 @@
 // Package onsen is a version line NESTED inside travel/: its tags are
 // travel/onsen/vX.Y.Z, and a change here moves onsen alone — travel's line
 // does not hear of it. That is the longest-prefix rule the harness proves.
+//
+// From v1 on the surface is stable: Bath's fields keep their meaning, a new
+// field is a minor, and dropping a reader is a major. The guide's contents are
+// not part of that promise — a spring is corrected in a patch.
 package onsen
 
 import "slices"
@@ -21,7 +25,7 @@ type Bath struct {
 var baths = []Bath{
 	{Name: "Beppu", Prefecture: "Oita", Water: "simple alkaline", SourceC: 60},
 	{Name: "Noboribetsu", Prefecture: "Hokkaido", Water: "sulphur", SourceC: 45},
-	{Name: "Kusatsu", Prefecture: "Gunma", Water: "acidic sulphur", SourceC: 41},
+	{Name: "Kusatsu", Prefecture: "Gunma", Water: "acidic sulphur", SourceC: 51},
 }
 
 // All returns a copy: the guide is package state, and a caller that sorts what

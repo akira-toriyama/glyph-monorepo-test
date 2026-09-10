@@ -2,14 +2,14 @@ package travel
 
 import "testing"
 
-func TestRouteStartsInKyoto(t *testing.T) {
-	if got := Route()[0].Name; got != "Kyoto" {
+func TestKansaiStartsInKyoto(t *testing.T) {
+	if got := Kansai().Stops[0].Name; got != "Kyoto" {
 		t.Fatalf("first stop = %q, want Kyoto", got)
 	}
 }
 
 func TestEveryStopNamesItsPrefecture(t *testing.T) {
-	for _, stop := range Route() {
+	for _, stop := range Kansai().Stops {
 		if stop.Prefecture == "" {
 			t.Errorf("%s names no prefecture", stop.Name)
 		}
@@ -17,27 +17,20 @@ func TestEveryStopNamesItsPrefecture(t *testing.T) {
 }
 
 func TestDurationSumsTheNights(t *testing.T) {
-	if got := Duration(); got != 7 {
+	if got := Kansai().Duration(); got != 7 {
 		t.Fatalf("Duration() = %d nights, want 7", got)
 	}
 }
 
 func TestOsakaIsLast(t *testing.T) {
-	r := Route()
-	if got := r[len(r)-1].Name; got != "Osaka" {
+	stops := Kansai().Stops
+	if got := stops[len(stops)-1].Name; got != "Osaka" {
 		t.Fatalf("last stop = %q, want Osaka — the airport bus leaves from Namba", got)
 	}
 }
 
-func TestRouteHandsBackACopy(t *testing.T) {
-	Route()[0].Name = "Himeji"
-	if got := Route()[0].Name; got != "Kyoto" {
-		t.Fatalf("first stop = %q after a caller wrote to the result, want Kyoto", got)
-	}
-}
-
 func TestNaraIsADayTripFromKyoto(t *testing.T) {
-	for _, stop := range Route() {
+	for _, stop := range Kansai().Stops {
 		switch stop.Name {
 		case "Nara":
 			if stop.Nights != 0 {
@@ -48,5 +41,12 @@ func TestNaraIsADayTripFromKyoto(t *testing.T) {
 				t.Errorf("Kyoto = %d nights, want 4 — it holds the Nara day too", stop.Nights)
 			}
 		}
+	}
+}
+
+func TestKansaiHandsBackAFreshItinerary(t *testing.T) {
+	Kansai().Stops[0].Name = "Himeji"
+	if got := Kansai().Stops[0].Name; got != "Kyoto" {
+		t.Fatalf("first stop = %q after a caller wrote to the result, want Kyoto", got)
 	}
 }
