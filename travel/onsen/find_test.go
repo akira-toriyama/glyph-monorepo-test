@@ -17,3 +17,12 @@ func TestFindMissesQuietly(t *testing.T) {
 		t.Fatalf("Find returned %+v; Atami is not in the guide", b)
 	}
 }
+
+func TestFindTakesTheSignboardSuffix(t *testing.T) {
+	for _, q := range []string{"Kusatsu Onsen", "  kusatsu-onsen ", "KUSATSU"} {
+		b, ok := Find(q)
+		if !ok || b.Name != "Kusatsu" {
+			t.Errorf("Find(%q) = %+v, %v; want Kusatsu", q, b, ok)
+		}
+	}
+}
