@@ -1,13 +1,11 @@
-// Package haiku is one independently versioned module of the harness. Its
-// version line is the tag prefix haiku/ — nothing here depends on curry.
 package haiku
 
-// Autumn is the seed poem; a new season lands as a minor bump of this module.
+// Autumn is Bashō's old pond, carried from the bootstrap commit unchanged.
 func Autumn() string {
 	return "an old silent pond\na frog jumps into the pond —\nsplash! silence again"
 }
 
-// Winter is the second season; a new season lands as a minor bump of this module.
+// Winter is Bashō's first winter rain.
 func Winter() string {
 	return "first winter rain—\neven the monkey seems to want\na little straw coat"
 }
