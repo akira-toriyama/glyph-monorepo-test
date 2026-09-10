@@ -27,3 +27,11 @@ func TestTheMatIsPackedUnderTheBag(t *testing.T) {
 		t.Fatalf("mat at %d, bag at %d: the bag goes in under the mat", mat, bag)
 	}
 }
+
+func TestGearHandsOutACopy(t *testing.T) {
+	got := Gear()
+	got[0] = Item{Name: "banjo"}
+	if again := Gear()[0].Name; again != "tent" {
+		t.Fatalf("first item = %q after a caller overwrote its own copy, want tent", again)
+	}
+}

@@ -2,6 +2,8 @@
 // Its version line is the tag prefix camp/.
 package camp
 
+import "slices"
+
 // Item is one line of the packing list. Grams is what actually leaves the
 // house: poles, pegs and the stuff sack are already inside it.
 type Item struct {
@@ -20,7 +22,9 @@ var list = []Item{
 	{Name: "water filter", Grams: 350, Category: Kitchen},
 }
 
-// Gear is the whole list, shelter through kitchen.
+// Gear is the whole list, shelter through kitchen. The result is a copy: list
+// is package state, and a caller that sorts or truncates what it gets back
+// would otherwise repack the list for everyone else.
 func Gear() []Item {
-	return list
+	return slices.Clone(list)
 }
