@@ -3,7 +3,7 @@ package camp
 // grams carries one entry per name Gear returns; TestEveryItemIsWeighed holds
 // the two in step, which is why PackWeight may read a miss as zero.
 var grams = map[string]int{
-	"tent":         1900,
+	"tent":         2400,
 	"sleeping bag": 900,
 	"sleeping mat": 480,
 	"gas stove":    210,
