@@ -22,13 +22,3 @@ func Recipe() []Ingredient {
 		{Name: "roux", Grams: 120, Prep: "broken into squares"},
 	}
 }
-
-// Ingredients is the shopping view, for callers with no scale in the kitchen.
-func Ingredients() []string {
-	r := Recipe()
-	names := make([]string, len(r))
-	for i, ing := range r {
-		names[i] = ing.Name
-	}
-	return names
-}

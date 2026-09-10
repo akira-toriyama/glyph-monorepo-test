@@ -1,27 +1,51 @@
 package haiku
 
-// Spring is Buson's spring sea.
-func Spring() string {
-	return "the spring sea\nrising and falling, rising\nand falling all day"
-}
+import "slices"
 
-// Summer is Bashō's summer grasses.
-func Summer() string {
-	return "the summer grasses —\nall that remains\nof the warriors' dreams"
-}
+var (
+	newYear = Poem{
+		Text:   "in my first dream\nI saw my home village —\nand I wept",
+		Author: "Kobayashi Issa",
+	}
 
-// Autumn is Bashō's old pond, carried from the bootstrap commit unchanged.
-func Autumn() string {
-	return "an old silent pond\na frog jumps into the pond —\nsplash! silence again"
-}
+	spring = Poem{
+		Text:   "the spring sea\nrising and falling, rising\nand falling all day",
+		Author: "Yosa Buson",
+	}
 
-// Winter is Bashō's first winter rain.
-func Winter() string {
-	return "first winter rain—\neven the monkey seems to want\na little straw coat"
-}
+	summer = Poem{
+		Text:   "the summer grasses —\nall that remains\nof the warriors' dreams",
+		Author: "Matsuo Bashō",
+	}
 
-// Seasons hands back the year in calendar order, which is not the order the
-// seasons were added in.
-func Seasons() []string {
-	return []string{Spring(), Summer(), Autumn(), Winter()}
-}
+	autumn = Poem{
+		Text:   "an old silent pond\na frog jumps into the pond —\nsplash! silence again",
+		Author: "Matsuo Bashō",
+	}
+
+	winter = Poem{
+		Text:   "first winter rain—\neven the monkey seems to want\na little straw coat",
+		Author: "Matsuo Bashō",
+	}
+)
+
+// year is saijiki order: the new year opens the book, then the four seasons in
+// calendar order.
+var year = []Poem{newYear, spring, summer, autumn, winter}
+
+// NewYear is the fifth volume of a saijiki: it stands beside the four seasons
+// rather than inside winter.
+func NewYear() Poem { return newYear }
+
+func Spring() Poem { return spring }
+
+func Summer() Poem { return summer }
+
+func Autumn() Poem { return autumn }
+
+func Winter() Poem { return winter }
+
+// Seasons hands back a fresh slice every call: year is package state, and a
+// caller that sorted or appended to the result would otherwise reorder the
+// year for every caller after it.
+func Seasons() []Poem { return slices.Clone(year) }

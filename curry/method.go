@@ -14,7 +14,7 @@ func Method() []Step {
 	return []Step{
 		{Text: "sweat the onion in oil until it slumps and turns gold", Minutes: 12, Stir: true},
 		{Text: "turn the carrot and sweet potato through the oil", Minutes: 3, Stir: true},
-		{Text: "pour in the water and bring the pot to a boil", Minutes: 6},
+		{Text: "pour in boiling water and bring the pot back up", Minutes: 2},
 		{Text: "skim the grey foam off the surface", Minutes: 2, Stir: true},
 		{Text: "cover and simmer until a skewer slides through the carrot", Minutes: 20},
 		{Text: "off the heat, melt the roux in a ladle at a time", Minutes: 4, Stir: true},

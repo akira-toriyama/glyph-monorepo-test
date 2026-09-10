@@ -6,19 +6,22 @@ package onsen
 import "slices"
 
 // Bath is one hot spring. Water is the 泉質 phrase a bathhouse posts on its
-// analysis board, not a chemical formula.
+// analysis board, not a chemical formula. SourceC is the temperature at the
+// spring head; the tub is cooler, sometimes by twenty degrees.
 type Bath struct {
 	Name       string
 	Prefecture string
 	Water      string
+	SourceC    int
 }
 
-// baths is the guide itself. Adding a spring here is the minor bump this line
-// exists to demonstrate.
+// baths is the guide itself, kept hottest first — nothing sorts it, so a row
+// whose temperature is corrected has to move. Adding a spring here is the
+// minor bump this line exists to demonstrate.
 var baths = []Bath{
-	{Name: "Kusatsu", Prefecture: "Gunma", Water: "acidic sulphur"},
-	{Name: "Beppu", Prefecture: "Oita", Water: "simple alkaline"},
-	{Name: "Noboribetsu", Prefecture: "Aomori", Water: "sulphur"},
+	{Name: "Beppu", Prefecture: "Oita", Water: "simple alkaline", SourceC: 60},
+	{Name: "Noboribetsu", Prefecture: "Hokkaido", Water: "sulphur", SourceC: 45},
+	{Name: "Kusatsu", Prefecture: "Gunma", Water: "acidic sulphur", SourceC: 41},
 }
 
 // All returns a copy: the guide is package state, and a caller that sorts what

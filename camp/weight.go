@@ -7,6 +7,7 @@ var grams = map[string]int{
 	"sleeping bag": 900,
 	"sleeping mat": 480,
 	"gas stove":    210,
+	"water filter": 350,
 }
 
 // WeightGrams reports what an item adds to the pack. ok is false for a name
