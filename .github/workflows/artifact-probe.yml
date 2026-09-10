@@ -1,0 +1,28 @@
+name: artifact-probe
+
+# EXPECTED TO FAIL — that is the probe. A repository that declares [[packages]]
+# has one draft per line and no line an `app` / `binary` artifact would belong
+# to, so glyph's reusable refuses the input once the verdict says packages
+# (glyph DESIGN §4.1, "The reusables"). This caller passes `binary` on a dry
+# run: the verdict is computed, nothing is written, and the run must go red at
+# "Refuse an artifact input on a packages repository". A green run here is
+# the finding.
+#
+# Dispatch by hand; never on push (its red is deliberate and must not sit on
+# main's status).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refused:
+    uses: akira-toriyama/glyph/.github/workflows/release.yml@v3.3.0-rc.1
+    with:
+      binary: haiku
+      dry-run: true
+      install-notes: |
+        (probe — never written)
+    permissions:
+      contents: write
