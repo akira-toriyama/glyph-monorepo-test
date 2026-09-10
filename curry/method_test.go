@@ -73,3 +73,23 @@ func TestDurationCountsTheRest(t *testing.T) {
 		t.Fatalf("Duration %s stops at the last stir", Duration())
 	}
 }
+
+// Ground spice is fat-soluble and tastes of dust until it hits hot oil; once
+// the water is in, blooming it is no longer possible.
+func TestTheSpicesBloomBeforeTheWater(t *testing.T) {
+	bloom, water := -1, -1
+	for i, s := range Method() {
+		switch {
+		case strings.HasPrefix(s.Text, "bloom"):
+			bloom = i
+		case strings.HasPrefix(s.Text, "pour"):
+			water = i
+		}
+	}
+	if bloom < 0 || water < 0 {
+		t.Fatalf("the method lost the bloom (%d) or the water (%d)", bloom, water)
+	}
+	if bloom > water {
+		t.Errorf("bloom at step %d, water at step %d", bloom, water)
+	}
+}

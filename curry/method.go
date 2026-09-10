@@ -10,16 +10,18 @@ type Step struct {
 	Stir    bool
 }
 
-// Method is the pot from cold pan to serving. The roux goes in off the heat —
+// Method is the pot from cold pan to serving. Two orderings are load-bearing:
+// the spices meet hot oil before any water, and the roux goes in off the heat —
 // stirred into a boiling pot it seizes into lumps that never dissolve.
 func Method() []Step {
 	return []Step{
 		{Text: "sweat the onion in oil until it slumps and turns gold", Minutes: 12, Stir: true},
+		{Text: "bloom the ground spices in the hot oil until they smell of more than dust", Minutes: 1, Stir: true},
 		{Text: "turn the carrot and sweet potato through the oil", Minutes: 3, Stir: true},
 		{Text: "pour in boiling water and bring the pot back up", Minutes: 2},
 		{Text: "skim the grey foam off the surface", Minutes: 2, Stir: true},
 		{Text: "cover and simmer until a skewer slides through the carrot", Minutes: 20},
-		{Text: "off the heat, stir the blend in and melt the roux", Minutes: 4, Stir: true},
+		{Text: "off the heat, melt the roux in a ladle at a time", Minutes: 4, Stir: true},
 		{Text: "back on the lowest flame, thicken uncovered", Minutes: 8, Stir: true},
 		{Text: "rest off the heat before serving", Minutes: 10},
 	}

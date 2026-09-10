@@ -18,13 +18,13 @@ type Ingredient struct {
 func Recipe() []Ingredient {
 	return []Ingredient{
 		{Name: "onion", Grams: 400, Prep: "sliced along the grain"},
-		{Name: "carrot", Grams: 200, Prep: "rolling-cut"},
-		{Name: "sweet potato", Grams: 300, Prep: "3cm cubes"},
-		{Name: "water", Grams: 800},
 		{Name: "cumin", Grams: 6, Prep: "ground"},
 		{Name: "coriander", Grams: 8, Prep: "ground"},
 		{Name: "turmeric", Grams: 4, Prep: "ground"},
 		{Name: "cayenne", Grams: 2, Prep: "ground"},
+		{Name: "carrot", Grams: 200, Prep: "rolling-cut"},
+		{Name: "sweet potato", Grams: 300, Prep: "3cm cubes"},
+		{Name: "water", Grams: 800},
 		{Name: "roux", Grams: 120, Prep: "broken into squares"},
 	}
 }
