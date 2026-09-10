@@ -28,3 +28,10 @@ func TestOsakaIsLast(t *testing.T) {
 		t.Fatalf("last stop = %q, want Osaka — the airport bus leaves from Namba", got)
 	}
 }
+
+func TestRouteHandsBackACopy(t *testing.T) {
+	Route()[0] = "Himeji"
+	if got := Route()[0]; got != "Kyoto" {
+		t.Fatalf("first stop = %q after a caller wrote to the result, want Kyoto", got)
+	}
+}

@@ -4,6 +4,8 @@
 // travel (the longest declared prefix wins).
 package travel
 
+import "slices"
+
 // route is the itinerary in visiting order; nights is keyed by the same names,
 // so a stop added to one has to land in the other.
 var route = []string{"Kyoto", "Nara", "Kobe", "Osaka"}
@@ -16,8 +18,9 @@ var nights = map[string]int{
 }
 
 // Route is the itinerary; a new stop lands as a minor bump of this module.
+// The result is the caller's to sort, reverse or truncate.
 func Route() []string {
-	return route
+	return slices.Clone(route)
 }
 
 // Nights answers 0 both for a stop nobody sleeps at and for a name that was
