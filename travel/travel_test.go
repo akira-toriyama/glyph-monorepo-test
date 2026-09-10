@@ -67,3 +67,16 @@ func TestSleepTownsHasOneEntryPerNight(t *testing.T) {
 		t.Fatalf("nights run %q to %q, want Kyoto to Osaka", towns[0], towns[len(towns)-1])
 	}
 }
+
+func TestKobeIsInHyogo(t *testing.T) {
+	for _, stop := range Kansai().Stops {
+		if stop.Name != "Kobe" {
+			continue
+		}
+		if stop.Prefecture != "Hyogo" {
+			t.Fatalf("Kobe is in %s, want Hyogo", stop.Prefecture)
+		}
+		return
+	}
+	t.Fatal("no stop named Kobe")
+}

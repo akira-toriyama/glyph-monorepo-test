@@ -26,7 +26,7 @@ func Kansai() Itinerary {
 	return Itinerary{Stops: []Stop{
 		{Name: "Kyoto", Prefecture: "Kyoto", Nights: 4},
 		{Name: "Nara", Prefecture: "Nara", Nights: 0},
-		{Name: "Kobe", Prefecture: "Osaka", Nights: 1},
+		{Name: "Kobe", Prefecture: "Hyogo", Nights: 1},
 		{Name: "Osaka", Prefecture: "Osaka", Nights: 2},
 	}}
 }
