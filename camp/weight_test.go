@@ -2,10 +2,10 @@ package camp
 
 import "testing"
 
-func TestEveryItemIsWeighed(t *testing.T) {
+func TestNoItemWeighsNothing(t *testing.T) {
 	for _, item := range Gear() {
-		if _, ok := WeightGrams(item); !ok {
-			t.Errorf("%q is on the list with no weight", item)
+		if item.Grams <= 0 {
+			t.Errorf("%q is on the list at %d g", item.Name, item.Grams)
 		}
 	}
 }

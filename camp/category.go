@@ -10,30 +10,13 @@ const (
 	Kitchen Category = "kitchen"
 )
 
-// category carries one entry per name Gear returns; TestEveryItemIsFiled holds
-// the two in step.
-var category = map[string]Category{
-	"tent":         Shelter,
-	"sleeping mat": Sleep,
-	"sleeping bag": Sleep,
-	"gas stove":    Kitchen,
-	"water filter": Kitchen,
-}
-
-// CategoryOf reports the bag an item rides in. ok is false for a name that is
-// not on the list.
-func CategoryOf(item string) (c Category, ok bool) {
-	c, ok = category[item]
-	return c, ok
-}
-
-// In returns the items filed under c, in list order. It walks Gear rather than
-// the category map because ranging a map is unordered, and the result is read
-// as a packing sequence.
-func In(c Category) []string {
-	var items []string
+// In returns the items filed under c, in list order. It walks the list rather
+// than an index keyed by name because the result is read as a packing
+// sequence.
+func In(c Category) []Item {
+	var items []Item
 	for _, item := range Gear() {
-		if category[item] == c {
+		if item.Category == c {
 			items = append(items, item)
 		}
 	}
