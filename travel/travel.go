@@ -26,7 +26,7 @@ func Kansai() Itinerary {
 	return Itinerary{Stops: []Stop{
 		{Name: "Kyoto", Prefecture: "Kyoto", Nights: 4},
 		{Name: "Nara", Prefecture: "Nara", Nights: 0},
-		{Name: "Kobe", Prefecture: "Osaka", Nights: 1},
+		{Name: "Kobe", Prefecture: "Hyogo", Nights: 1},
 		{Name: "Osaka", Prefecture: "Osaka", Nights: 2},
 	}}
 }
@@ -39,4 +39,16 @@ func (it Itinerary) Duration() int {
 		total += stop.Nights
 	}
 	return total
+}
+
+// SleepTowns is the town of each night in order, one entry per night: a stop
+// with four nights repeats four times and a day trip appears not at all.
+func (it Itinerary) SleepTowns() []string {
+	out := make([]string, 0, it.Duration())
+	for _, stop := range it.Stops {
+		for range stop.Nights {
+			out = append(out, stop.Name)
+		}
+	}
+	return out
 }

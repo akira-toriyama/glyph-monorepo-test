@@ -47,3 +47,15 @@ func HandsOn() time.Duration {
 	}
 	return d
 }
+
+// Reheat is the day-two pot, which is the one worth making a big batch for:
+// the starch keeps swelling overnight, so the sauce comes out of the fridge
+// thicker than it went in. Never at a boil — roux is an emulsion, and a hard
+// boil splits its fat back out onto the surface.
+func Reheat() []Step {
+	return []Step{
+		{Text: "loosen the cold pot with a splash of water", Minutes: 1, Stir: true},
+		{Text: "cover and warm it through on the lowest flame", Minutes: 12},
+		{Text: "taste for salt — a night in the fridge flattens it", Minutes: 2, Stir: true},
+	}
+}

@@ -1,6 +1,9 @@
 package travel
 
-import "testing"
+import (
+	"slices"
+	"testing"
+)
 
 func TestKansaiStartsInKyoto(t *testing.T) {
 	if got := Kansai().Stops[0].Name; got != "Kyoto" {
@@ -49,4 +52,31 @@ func TestKansaiHandsBackAFreshItinerary(t *testing.T) {
 	if got := Kansai().Stops[0].Name; got != "Kyoto" {
 		t.Fatalf("first stop = %q after a caller wrote to the result, want Kyoto", got)
 	}
+}
+
+func TestSleepTownsHasOneEntryPerNight(t *testing.T) {
+	it := Kansai()
+	towns := it.SleepTowns()
+	if len(towns) != it.Duration() {
+		t.Fatalf("%d sleep towns for %d nights", len(towns), it.Duration())
+	}
+	if slices.Contains(towns, "Nara") {
+		t.Error("Nara is a day trip; the bed that night is in Kyoto")
+	}
+	if towns[0] != "Kyoto" || towns[len(towns)-1] != "Osaka" {
+		t.Fatalf("nights run %q to %q, want Kyoto to Osaka", towns[0], towns[len(towns)-1])
+	}
+}
+
+func TestKobeIsInHyogo(t *testing.T) {
+	for _, stop := range Kansai().Stops {
+		if stop.Name != "Kobe" {
+			continue
+		}
+		if stop.Prefecture != "Hyogo" {
+			t.Fatalf("Kobe is in %s, want Hyogo", stop.Prefecture)
+		}
+		return
+	}
+	t.Fatal("no stop named Kobe")
 }

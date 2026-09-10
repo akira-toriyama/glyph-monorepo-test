@@ -1,60 +1,97 @@
 package haiku
 
 import (
-	"slices"
 	"strings"
 	"testing"
 )
 
-func TestSeasonsHoldsEverySeason(t *testing.T) {
-	if got := len(Seasons()); got != 5 {
-		t.Fatalf("poems = %d, want 5", got)
-	}
-	if !slices.Contains(Seasons(), NewYear()) {
-		t.Error("the new year is filed nowhere")
+func TestYearOpensOnTheNewYear(t *testing.T) {
+	if got := Year()[0]; got != NewYear {
+		t.Fatalf("the book opens on %q", got)
 	}
 }
 
-func TestSeasonsOpensOnTheNewYear(t *testing.T) {
-	if got := Seasons()[0]; got != NewYear() {
-		t.Fatalf("the book opens on %q", got.Text)
+func TestEveryVolumeHoldsAPoem(t *testing.T) {
+	for _, s := range Year() {
+		if len(Of(s)) == 0 {
+			t.Errorf("%s: nothing filed", s)
+		}
 	}
 }
 
-func TestSeasonsCannotBeReordered(t *testing.T) {
-	first := Seasons()[0]
-	got := Seasons()
+func TestOfMissesASeasonNobodyNamed(t *testing.T) {
+	if got := Of("monsoon"); got != nil {
+		t.Fatalf("the monsoon is no season here, but it holds %d poems", len(got))
+	}
+}
+
+func TestAVolumeCannotBeReordered(t *testing.T) {
+	first := Of(Spring)[0]
+	got := Of(Spring)
 	got[0] = Poem{Text: "vandalism"}
-	if Seasons()[0] != first {
-		t.Fatalf("the year now opens on %q", Seasons()[0].Text)
+	if Of(Spring)[0] != first {
+		t.Fatalf("spring now opens on %q", Of(Spring)[0].Text)
 	}
 }
 
-func TestEveryPoemNamesItsKigo(t *testing.T) {
-	filed := map[string]string{}
-	for _, p := range Seasons() {
-		if p.Kigo == "" {
-			t.Errorf("no season word: %q", p.Text)
+func TestSomeVolumeHoldsMoreThanOnePoem(t *testing.T) {
+	for _, s := range Year() {
+		if len(Of(s)) > 1 {
+			return
 		}
-		if other, dup := filed[p.Kigo]; dup {
-			t.Errorf("%q files both %q and %q", p.Kigo, other, p.Text)
-		}
-		filed[p.Kigo] = p.Text
 	}
+	t.Fatal("every volume still holds exactly one poem")
+}
+
+func TestAutumnKeepsTheCrow(t *testing.T) {
+	if !holdsKigo(Of(Autumn), "autumn nightfall") {
+		t.Fatal("the crow is filed under no season")
+	}
+}
+
+func TestTheFrogIsFiledUnderSpring(t *testing.T) {
+	if !holdsKigo(Of(Spring), "frog") {
+		t.Error("spring does not hold the old pond")
+	}
+	if holdsKigo(Of(Autumn), "frog") {
+		t.Error("autumn still holds the old pond")
+	}
+}
+
+func holdsKigo(volume []Poem, kigo string) bool {
+	for _, p := range volume {
+		if p.Kigo == kigo {
+			return true
+		}
+	}
+	return false
 }
 
 func TestEveryPoemIsThreeLines(t *testing.T) {
-	for _, p := range Seasons() {
+	for _, p := range Poems() {
 		if got := len(strings.Split(p.Text, "\n")); got != 3 {
 			t.Errorf("%s: lines = %d, want 3", p.Author, got)
 		}
 	}
 }
 
-func TestEveryPoemNamesItsPoet(t *testing.T) {
-	for _, p := range Seasons() {
-		if p.Author == "" {
-			t.Errorf("no poet: %q", p.Text)
+func TestEveryCutIsSpaced(t *testing.T) {
+	for _, p := range Poems() {
+		if strings.Count(p.Text, "—") != strings.Count(p.Text, " —") {
+			t.Errorf("%s: an em dash with nothing before it: %q", p.Author, p.Text)
 		}
+	}
+}
+
+func TestEveryPoemNamesItsPoetAndKigo(t *testing.T) {
+	filed := map[string]string{}
+	for _, p := range Poems() {
+		if p.Author == "" || p.Kigo == "" {
+			t.Errorf("incomplete entry: %q", p.Text)
+		}
+		if other, dup := filed[p.Kigo]; dup {
+			t.Errorf("%q files both %q and %q", p.Kigo, other, p.Text)
+		}
+		filed[p.Kigo] = p.Text
 	}
 }

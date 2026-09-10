@@ -93,3 +93,27 @@ func TestTheSpicesBloomBeforeTheWater(t *testing.T) {
 		t.Errorf("bloom at step %d, water at step %d", bloom, water)
 	}
 }
+
+// Day two has to be quick or the big batch has no point.
+func TestReheatIsQuickerThanTheCook(t *testing.T) {
+	var d time.Duration
+	for _, s := range Reheat() {
+		if s.Minutes <= 0 {
+			t.Errorf("reheat step %q takes %d minutes", s.Text, s.Minutes)
+		}
+		d += time.Duration(s.Minutes) * time.Minute
+	}
+	if d >= Duration() {
+		t.Fatalf("reheating costs %s against a cook of %s", d, Duration())
+	}
+}
+
+// Roux is an emulsion; a hard boil on day two splits it and leaves the fat
+// sitting on top of the sauce.
+func TestReheatNeverBoils(t *testing.T) {
+	for _, s := range Reheat() {
+		if strings.Contains(s.Text, "boil") {
+			t.Errorf("reheat step %q takes the pot to a boil", s.Text)
+		}
+	}
+}

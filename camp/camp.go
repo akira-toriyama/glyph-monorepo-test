@@ -19,7 +19,9 @@ var list = []Item{
 	{Name: "sleeping mat", Grams: 480, Category: Sleep},
 	{Name: "sleeping bag", Grams: 900, Category: Sleep},
 	{Name: "gas stove", Grams: 210, Category: Kitchen},
-	{Name: "water filter", Grams: 350, Category: Kitchen},
+	{Name: "pot", Grams: 340, Category: Kitchen},
+	{Name: "mug", Grams: 120, Category: Kitchen},
+	{Name: "water filter", Grams: 470, Category: Kitchen},
 }
 
 // Gear is the whole list, shelter through kitchen. The result is a copy: list

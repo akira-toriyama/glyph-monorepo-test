@@ -20,7 +20,7 @@ func TestMissingIgnoresWhatThePackHoldsBeyondTheList(t *testing.T) {
 
 func TestMissingAnswersInListOrder(t *testing.T) {
 	packed := []string{"water filter", "sleeping bag", "tent"}
-	want := []string{"sleeping mat", "gas stove"}
+	want := []string{"sleeping mat", "gas stove", "pot", "mug"}
 	if got := names(Missing(packed)); !slices.Equal(got, want) {
 		t.Fatalf("Missing() = %q, want %q", got, want)
 	}

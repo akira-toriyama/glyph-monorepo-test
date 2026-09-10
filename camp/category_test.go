@@ -25,7 +25,7 @@ func TestEveryItemIsFiled(t *testing.T) {
 }
 
 func TestInReadsTheKitchenInListOrder(t *testing.T) {
-	want := []string{"gas stove", "water filter"}
+	want := []string{"gas stove", "pot", "mug", "water filter"}
 	if got := names(In(Kitchen)); !slices.Equal(got, want) {
 		t.Fatalf("In(Kitchen) = %q, want %q", got, want)
 	}
