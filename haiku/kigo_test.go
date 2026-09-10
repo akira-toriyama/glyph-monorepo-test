@@ -29,3 +29,13 @@ func TestByKigoMissesHalfAWord(t *testing.T) {
 		t.Fatalf("the season word is the first winter rain, but %q answered", got.Text)
 	}
 }
+
+func TestByKigoFindsTheSummerGrasses(t *testing.T) {
+	got, ok := ByKigo("summer grasses")
+	if !ok {
+		t.Fatal("the summer grasses are filed under nothing")
+	}
+	if got != Summer() {
+		t.Fatalf("found %q", got.Text)
+	}
+}

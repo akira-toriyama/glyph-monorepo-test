@@ -18,7 +18,7 @@ var (
 	summer = Poem{
 		Text:   "the summer grasses —\nall that remains\nof the warriors' dreams",
 		Author: "Matsuo Bashō",
-		Kigo:   "grass",
+		Kigo:   "summer grasses",
 	}
 
 	autumn = Poem{
