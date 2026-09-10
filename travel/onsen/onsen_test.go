@@ -29,3 +29,15 @@ func TestEveryBathIsPlacedAndTyped(t *testing.T) {
 		}
 	}
 }
+
+func TestAllHandsBackACopy(t *testing.T) {
+	got := All()
+	if len(got) == 0 {
+		t.Fatal("the guide is empty")
+	}
+	first := got[0]
+	got[0] = Bath{Name: "Atami"}
+	if again := All()[0]; again != first {
+		t.Fatalf("the guide opens on %+v after a caller overwrote its copy, want %+v", again, first)
+	}
+}
