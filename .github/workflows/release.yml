@@ -30,8 +30,29 @@ jobs:
     uses: akira-toriyama/glyph/.github/workflows/release.yml@v3.3.0
     with:
       dry-run: ${{ github.event.inputs.dry_run == 'true' }}
+      # Verbatim on EVERY line's draft, under one `---` (the reusable hands it
+      # to `release --footer-file`), so it can name the pattern but never this
+      # draft's own tag — one string, five lines.
       install-notes: |
-        Nothing to install — each module is fetched with `go get` at its own tag.
+        ### Install
+
+        Every module here rides its own version line, so the tag above names
+        **one** module and leaves the other four where they were:
+
+        ```sh
+        go get github.com/akira-toriyama/glyph-monorepo-test/<module>@<the tag above>
+        ```
+
+        | line | module path |
+        |---|---|
+        | `haiku/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/haiku` |
+        | `curry/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/curry` |
+        | `travel/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/travel` |
+        | `travel/onsen/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/travel/onsen` |
+        | `camp/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/camp` |
+
+        Nothing is built and nothing is uploaded — the module at its tag is the
+        whole artifact.
     permissions:
       contents: write
 

@@ -732,8 +732,35 @@ jobs:
           for t in haiku/v0.0.0 curry/v0.0.0 travel/v0.0.0 travel/onsen/v0.0.0 camp/v0.0.0; do
             git rev-parse "$t^{commit}" > /dev/null
           done
-          git worktree add -q --detach "$RUNNER_TEMP/w" "$FROZEN"
+          # A COORDINATE IS A COMMIT *AND* THE TAG LANDSCAPE IT COULD SEE.
+          # glyph resolves a line's base with `git tag --list` — every tag the
+          # clone holds, reachability never consulted (gitsource.Tags, read by
+          # sincetag.go's latestVersionTag) — so a release cut AFTER this
+          # coordinate becomes the base of a walk that starts BEFORE it, and
+          # every literal below collapses to "none" with nothing on stderr.
+          # Measured 2026-09-11 at v3.3.0, planting haiku/v0.2.0 and
+          # travel/v0.1.0 on a descendant of $FROZEN: arm (a) answered
+          # `haiku:v0.2.0:none|…|travel:v0.1.0:none` where it wants
+          # `haiku:v0.1.0:patch|…|travel:v0.0.0:minor`.
+          #
+          # So the frozen checkout is a SEPARATE clone whose tags are pruned
+          # back to the ones this coordinate could see. It is not a worktree:
+          # tag refs are shared across worktrees, and deleting them there would
+          # reach the `repo` checkout the live-main step below still needs
+          # whole.
+          git clone -q --no-hardlinks . "$RUNNER_TEMP/w"
+          git -C "$RUNNER_TEMP/w" checkout -q --detach "$FROZEN"
+          git -C "$RUNNER_TEMP/w" tag --no-merged "$FROZEN" | while read -r t; do
+            git -C "$RUNNER_TEMP/w" tag -d "$t" > /dev/null
+          done
           assert_eq worktree-head "$(git -C "$RUNNER_TEMP/w" rev-parse --short HEAD)" "$FROZEN"
+          # The positive control for the pruning: the landscape is asserted as a
+          # literal, so a prune that silently stopped working reds here rather
+          # than turning every arm below into a vacuous "none". A tag cut later
+          # on an ANCESTOR of $FROZEN belongs in this list and is a real red.
+          assert_eq frozen-tags \
+            "$(git -C "$RUNNER_TEMP/w" tag --list | sort | tr '\n' ' ')" \
+            'camp/v0.0.0 curry/v0.0.0 curry/v0.0.1 haiku/v0.0.0 haiku/v0.1.0 travel/onsen/v0.0.0 travel/v0.0.0 '
 
       - name: "(a) a bare --since-tag walks every line from its own highest tag — and names a commit no branch holds"
         if: ${{ !cancelled() }}
@@ -847,7 +874,7 @@ jobs:
         working-directory: repo
         run: |
           set -euo pipefail
-          git worktree remove --force "$RUNNER_TEMP/w" || true
+          rm -rf "$RUNNER_TEMP/w"
           test -z "$(git status --porcelain)"
 
   # ── drafts ────────────────────────────────────────────────────────────────
