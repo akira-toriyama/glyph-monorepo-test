@@ -107,3 +107,13 @@ func TestReheatIsQuickerThanTheCook(t *testing.T) {
 		t.Fatalf("reheating costs %s against a cook of %s", d, Duration())
 	}
 }
+
+// Roux is an emulsion; a hard boil on day two splits it and leaves the fat
+// sitting on top of the sauce.
+func TestReheatNeverBoils(t *testing.T) {
+	for _, s := range Reheat() {
+		if strings.Contains(s.Text, "boil") {
+			t.Errorf("reheat step %q takes the pot to a boil", s.Text)
+		}
+	}
+}
