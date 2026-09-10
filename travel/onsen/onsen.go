@@ -20,7 +20,7 @@ type Bath struct {
 // minor bump this line exists to demonstrate.
 var baths = []Bath{
 	{Name: "Beppu", Prefecture: "Oita", Water: "simple alkaline", SourceC: 60},
-	{Name: "Noboribetsu", Prefecture: "Aomori", Water: "sulphur", SourceC: 45},
+	{Name: "Noboribetsu", Prefecture: "Hokkaido", Water: "sulphur", SourceC: 45},
 	{Name: "Kusatsu", Prefecture: "Gunma", Water: "acidic sulphur", SourceC: 41},
 }
 
