@@ -1,5 +1,7 @@
 package haiku
 
+import "slices"
+
 var (
 	spring = Poem{
 		Text:   "the spring sea\nrising and falling, rising\nand falling all day",
@@ -42,5 +44,7 @@ func Winter() Poem { return winter }
 // rather than inside winter.
 func NewYear() Poem { return newYear }
 
-// Seasons hands back the whole year in one call.
-func Seasons() []Poem { return year }
+// Seasons hands back a fresh slice every call: year is package state, and a
+// caller that sorted or appended to the result would otherwise reorder the
+// year for every caller after it.
+func Seasons() []Poem { return slices.Clone(year) }

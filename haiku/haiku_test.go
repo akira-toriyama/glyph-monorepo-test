@@ -21,6 +21,15 @@ func TestSeasonsOpensOnSpring(t *testing.T) {
 	}
 }
 
+func TestSeasonsCannotBeReordered(t *testing.T) {
+	first := Seasons()[0]
+	got := Seasons()
+	got[0] = Poem{Text: "vandalism"}
+	if Seasons()[0] != first {
+		t.Fatalf("the year now opens on %q", Seasons()[0].Text)
+	}
+}
+
 func TestEveryPoemIsThreeLines(t *testing.T) {
 	for _, p := range Seasons() {
 		if got := len(strings.Split(p.Text, "\n")); got != 3 {
