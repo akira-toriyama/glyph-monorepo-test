@@ -7,3 +7,11 @@ func TestRouteStartsInKyoto(t *testing.T) {
 		t.Fatalf("first stop = %q, want Kyoto", got)
 	}
 }
+
+func TestEveryStopIsInTheNightsTable(t *testing.T) {
+	for _, stop := range Route() {
+		if _, ok := nights[stop]; !ok {
+			t.Errorf("%s has no entry in the nights table", stop)
+		}
+	}
+}

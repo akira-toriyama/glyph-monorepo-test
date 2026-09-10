@@ -4,7 +4,24 @@
 // travel (the longest declared prefix wins).
 package travel
 
+// route is the itinerary in visiting order; nights is keyed by the same names,
+// so a stop added to one has to land in the other.
+var route = []string{"Kyoto", "Nara", "Osaka", "Kobe"}
+
+var nights = map[string]int{
+	"Kyoto": 3,
+	"Nara":  1,
+	"Osaka": 2,
+	"Kobe":  1,
+}
+
 // Route is the itinerary; a new stop lands as a minor bump of this module.
 func Route() []string {
-	return []string{"Kyoto", "Nara", "Osaka", "Kobe"}
+	return route
+}
+
+// Nights answers 0 both for a stop nobody sleeps at and for a name that was
+// never on the route.
+func Nights(stop string) int {
+	return nights[stop]
 }
