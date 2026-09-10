@@ -35,3 +35,14 @@ func TestKobeToOsakaRidesTheSpecialRapid(t *testing.T) {
 	}
 	t.Fatal("no leg from Kobe to Osaka")
 }
+
+func TestTravelTimeSumsTheLegs(t *testing.T) {
+	it := Kansai()
+	want := 0
+	for _, leg := range it.Legs() {
+		want += leg.Minutes
+	}
+	if got := it.TravelTime(); got != want {
+		t.Fatalf("TravelTime() = %d min, want %d", got, want)
+	}
+}

@@ -30,3 +30,13 @@ func (it Itinerary) Legs() []Leg {
 	}
 	return out
 }
+
+// TravelTime is time on trains only: platform transfers and the wait for the
+// next departure are nobody's schedule but the traveller's.
+func (it Itinerary) TravelTime() int {
+	total := 0
+	for _, leg := range it.Legs() {
+		total += leg.Minutes
+	}
+	return total
+}
