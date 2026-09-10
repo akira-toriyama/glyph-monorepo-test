@@ -1,6 +1,9 @@
 go 1.25.0
 
 use (
+	./camp
 	./curry
 	./haiku
+	./travel
+	./travel/onsen
 )

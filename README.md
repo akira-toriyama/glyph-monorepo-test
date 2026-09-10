@@ -12,6 +12,9 @@ of the pull's commits touched which module.
 |---|---|---|
 | `haiku/` | `haiku/vX.Y.Z` | a new season is a `^` minor; a typo fix is a `~` patch |
 | `curry/` | `curry/vX.Y.Z` | a new ingredient is a `^` minor; a swapped one is a `~` patch |
+| `travel/` | `travel/vX.Y.Z` | a new stop is a `^` minor; a reordered one is a `~` patch |
+| `travel/onsen/` | `travel/onsen/vX.Y.Z` | **nested** in `travel/`: a new bath moves onsen alone — the longest declared prefix wins |
+| `camp/` | `camp/vX.Y.Z` | a new item is a `^` minor; a swapped one is a `~` patch |
 
 Tags follow the Go multi-module convention (`<dir>/vX.Y.Z`), so each module is
 also fetchable with `go get` at its own version. Nothing is built or published

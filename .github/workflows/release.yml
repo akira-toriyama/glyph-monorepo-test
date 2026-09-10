@@ -73,8 +73,8 @@ jobs:
             exit 1
           fi
           paths="$(printf '%s' "$PACKAGES" | jq -r 'map(.path) | join(" ")')"
-          if [ "$paths" != "haiku curry" ]; then
-            echo "::error::packages lists '$paths', want 'haiku curry' (every declared line, in config order)"
+          if [ "$paths" != "haiku curry travel travel/onsen camp" ]; then
+            echo "::error::packages lists '$paths', want 'haiku curry travel travel/onsen camp' (every declared line, in config order)"
             exit 1
           fi
           # The array is handed through minus each line's body and url.
@@ -95,8 +95,10 @@ jobs:
           gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
             --jq '.[] | select(.draft) | .tag_name' > drafts.txt
           echo "drafts standing:"; cat drafts.txt
-          for line in haiku curry; do
-            n="$(grep -c "^$line/v" drafts.txt || true)"
+          for line in haiku curry travel travel/onsen camp; do
+            # -x on the version part: travel/v0.1.0 must not count for travel/onsen
+            # and travel/onsen/v0.1.0 must not count for travel.
+            n="$(grep -cE "^$line/v[0-9]+\.[0-9]+\.[0-9]+$" drafts.txt || true)"
             if [ "$n" -gt 1 ]; then
               echo "::error::$line has $n drafts — the reusable must keep at most one per line"
               exit 1
