@@ -6,13 +6,13 @@ package travel
 
 // route is the itinerary in visiting order; nights is keyed by the same names,
 // so a stop added to one has to land in the other.
-var route = []string{"Kyoto", "Nara", "Osaka", "Kobe"}
+var route = []string{"Kyoto", "Nara", "Kobe", "Osaka"}
 
 var nights = map[string]int{
 	"Kyoto": 3,
 	"Nara":  1,
-	"Osaka": 2,
 	"Kobe":  1,
+	"Osaka": 2,
 }
 
 // Route is the itinerary; a new stop lands as a minor bump of this module.

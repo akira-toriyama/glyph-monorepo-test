@@ -21,3 +21,10 @@ func TestDurationSumsTheNights(t *testing.T) {
 		t.Fatalf("Duration() = %d nights, want 7", got)
 	}
 }
+
+func TestOsakaIsLast(t *testing.T) {
+	r := Route()
+	if got := r[len(r)-1]; got != "Osaka" {
+		t.Fatalf("last stop = %q, want Osaka — the airport bus leaves from Namba", got)
+	}
+}
