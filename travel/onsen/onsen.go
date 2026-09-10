@@ -25,7 +25,7 @@ type Bath struct {
 var baths = []Bath{
 	{Name: "Beppu", Prefecture: "Oita", Water: "simple alkaline", SourceC: 60},
 	{Name: "Noboribetsu", Prefecture: "Hokkaido", Water: "sulphur", SourceC: 45},
-	{Name: "Kusatsu", Prefecture: "Gunma", Water: "acidic sulphur", SourceC: 41},
+	{Name: "Kusatsu", Prefecture: "Gunma", Water: "acidic sulphur", SourceC: 51},
 }
 
 // All returns a copy: the guide is package state, and a caller that sorts what
