@@ -42,3 +42,13 @@ func TestSkimComesBeforeTheLid(t *testing.T) {
 		t.Errorf("skim at step %d, lid at step %d", skim, lid)
 	}
 }
+
+// Cold water off a finished sweat drops the pot under a simmer and the sweat
+// has to be paid for twice; the step is a top-up, not a restart.
+func TestTheWaterGoesInBoiling(t *testing.T) {
+	for _, s := range Method() {
+		if strings.Contains(s.Text, "water") && !strings.Contains(s.Text, "boiling") {
+			t.Fatalf("water step %q pours it in cold", s.Text)
+		}
+	}
+}
