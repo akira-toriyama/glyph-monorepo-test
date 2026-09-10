@@ -21,3 +21,16 @@ func TestEveryLegNamesItsService(t *testing.T) {
 		}
 	}
 }
+
+func TestKobeToOsakaRidesTheSpecialRapid(t *testing.T) {
+	for _, leg := range Legs() {
+		if leg.From != "Kobe" || leg.To != "Osaka" {
+			continue
+		}
+		if leg.Line != "JR special rapid" || leg.Minutes != 21 {
+			t.Fatalf("Kobe to Osaka = %s in %d min, want the JR special rapid in 21", leg.Line, leg.Minutes)
+		}
+		return
+	}
+	t.Fatal("no leg from Kobe to Osaka")
+}

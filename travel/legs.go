@@ -14,7 +14,7 @@ type Leg struct {
 var hops = map[string]Leg{
 	"Kyoto>>>Nara":  {Line: "Kintetsu limited express", Minutes: 35},
 	"Nara>>>Kobe":   {Line: "Kintetsu Nara Line", Minutes: 80},
-	"Kobe>>>Osaka":  {Line: "Tokaido Shinkansen", Minutes: 13},
+	"Kobe>>>Osaka":  {Line: "JR special rapid", Minutes: 21},
 	"Osaka>>>Kyoto": {Line: "JR special rapid", Minutes: 28},
 }
 
