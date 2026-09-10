@@ -11,6 +11,12 @@ func TestSeasonsHoldsEverySeason(t *testing.T) {
 	}
 }
 
+func TestSeasonsOpensOnSpring(t *testing.T) {
+	if got := Seasons()[0]; got != Spring() {
+		t.Fatalf("the year opens on %q", got)
+	}
+}
+
 func TestEverySeasonIsThreeLines(t *testing.T) {
 	for _, poem := range Seasons() {
 		if got := len(strings.Split(poem, "\n")); got != 3 {
