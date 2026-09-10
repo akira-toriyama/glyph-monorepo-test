@@ -2,12 +2,6 @@ package onsen
 
 import "testing"
 
-func TestBathsAreNamed(t *testing.T) {
-	if len(Baths()) == 0 {
-		t.Fatal("no baths")
-	}
-}
-
 func TestEveryBathIsPlacedAndTyped(t *testing.T) {
 	want := map[string]Bath{
 		"Kusatsu":     {Name: "Kusatsu", Prefecture: "Gunma", Water: "acidic sulphur", SourceC: 51},
@@ -42,19 +36,15 @@ func TestAllHandsBackACopy(t *testing.T) {
 	}
 }
 
-// TestV1SurfaceHolds is the 1.0 declaration in machine-readable form: the
-// declarations below stop compiling if a frozen signature moves, and the body
-// checks the readers still answer over one guide.
+// TestV1SurfaceHolds is the 1.0 declaration in machine-readable form. Baths
+// left with v2; the declarations below stop compiling if one of the readers
+// still under the promise moves, and the body checks they answer over one guide.
 func TestV1SurfaceHolds(t *testing.T) {
 	var (
 		all    func() []Bath             = All
-		names  func() []string           = Baths
 		find   func(string) (Bath, bool) = Find
 		hotter func(int) []Bath          = Hotter
 	)
-	if len(all()) != len(names()) {
-		t.Fatalf("All returns %d baths and Baths %d names", len(all()), len(names()))
-	}
 	for _, b := range all() {
 		if _, ok := find(b.Name); !ok {
 			t.Errorf("Find misses %s, which All returns", b.Name)

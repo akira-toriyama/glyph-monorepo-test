@@ -33,13 +33,3 @@ var baths = []Bath{
 func All() []Bath {
 	return slices.Clone(baths)
 }
-
-// Baths lists the names alone, the shape the guide had before a spring was
-// more than a word.
-func Baths() []string {
-	names := make([]string, 0, len(baths))
-	for _, b := range baths {
-		names = append(names, b.Name)
-	}
-	return names
-}
