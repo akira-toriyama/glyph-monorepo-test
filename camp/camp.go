@@ -6,5 +6,5 @@ package camp
 // listed first. A new item lands as a minor bump of this module, a swapped one
 // as a patch.
 func Gear() []string {
-	return []string{"tent", "sleeping bag", "sleeping mat", "gas stove"}
+	return []string{"tent", "sleeping mat", "sleeping bag", "gas stove"}
 }
