@@ -58,3 +58,16 @@ func TestLegsStopAtTheLastStop(t *testing.T) {
 		t.Fatalf("last leg arrives at %q, want %q", last.To, want)
 	}
 }
+
+func TestNaraToKobeIsOneThroughTrain(t *testing.T) {
+	for _, leg := range Kansai().Legs() {
+		if leg.From != "Nara" || leg.To != "Kobe" {
+			continue
+		}
+		if leg.Line != "Hanshin Namba Line through service" {
+			t.Fatalf("Nara to Kobe rides the %s, want the Hanshin Namba Line through service", leg.Line)
+		}
+		return
+	}
+	t.Fatal("no leg from Nara to Kobe")
+}

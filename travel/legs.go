@@ -14,7 +14,7 @@ type Leg struct {
 // leg is still reported, with no Line and no Minutes.
 var hops = map[string]Leg{
 	"Kyoto>>>Nara": {Line: "Kintetsu limited express", Minutes: 35},
-	"Nara>>>Kobe":  {Line: "Kintetsu Nara Line", Minutes: 80},
+	"Nara>>>Kobe":  {Line: "Hanshin Namba Line through service", Minutes: 80},
 	"Kobe>>>Osaka": {Line: "JR special rapid", Minutes: 21},
 }
 
