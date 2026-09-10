@@ -54,3 +54,13 @@ func TestV1SurfaceHolds(t *testing.T) {
 		t.Errorf("Hotter(0) returns %d baths, want the whole guide", len(got))
 	}
 }
+
+func TestTheGuideReadsHottestFirst(t *testing.T) {
+	got := All()
+	for i := 1; i < len(got); i++ {
+		if got[i-1].SourceC < got[i].SourceC {
+			t.Fatalf("%s (%d°C) prints before %s (%d°C)",
+				got[i-1].Name, got[i-1].SourceC, got[i].Name, got[i].SourceC)
+		}
+	}
+}

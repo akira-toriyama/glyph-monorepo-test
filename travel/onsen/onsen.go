@@ -19,13 +19,14 @@ type Bath struct {
 	SourceC    int
 }
 
-// baths is the guide itself, kept hottest first — nothing sorts it, so a row
-// whose temperature is corrected has to move. Adding a spring here is the
-// minor bump this line exists to demonstrate.
+// baths is the guide itself, printed hottest first. Nothing sorts it: a new
+// spring, or a corrected temperature, goes where its source puts it, and
+// TestTheGuideReadsHottestFirst is what now holds the file to that. Adding a
+// spring here is the minor bump this line exists to demonstrate.
 var baths = []Bath{
 	{Name: "Beppu", Prefecture: "Oita", Water: "sodium chloride", SourceC: 60},
-	{Name: "Noboribetsu", Prefecture: "Hokkaido", Water: "sulphur", SourceC: 45},
 	{Name: "Kusatsu", Prefecture: "Gunma", Water: "acidic sulphur", SourceC: 51},
+	{Name: "Noboribetsu", Prefecture: "Hokkaido", Water: "sulphur", SourceC: 45},
 }
 
 // All returns a copy: the guide is package state, and a caller that sorts what
