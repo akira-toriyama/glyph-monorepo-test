@@ -17,8 +17,8 @@ type Stop struct {
 
 // route is the itinerary in visiting order.
 var route = []Stop{
-	{Name: "Kyoto", Prefecture: "Kyoto", Nights: 3},
-	{Name: "Nara", Prefecture: "Nara", Nights: 1},
+	{Name: "Kyoto", Prefecture: "Kyoto", Nights: 4},
+	{Name: "Nara", Prefecture: "Nara", Nights: 0},
 	{Name: "Kobe", Prefecture: "Osaka", Nights: 1},
 	{Name: "Osaka", Prefecture: "Osaka", Nights: 2},
 }

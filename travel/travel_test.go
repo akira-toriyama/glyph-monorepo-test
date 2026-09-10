@@ -35,3 +35,18 @@ func TestRouteHandsBackACopy(t *testing.T) {
 		t.Fatalf("first stop = %q after a caller wrote to the result, want Kyoto", got)
 	}
 }
+
+func TestNaraIsADayTripFromKyoto(t *testing.T) {
+	for _, stop := range Route() {
+		switch stop.Name {
+		case "Nara":
+			if stop.Nights != 0 {
+				t.Errorf("Nara = %d nights, want 0 — the bed stays in Kyoto", stop.Nights)
+			}
+		case "Kyoto":
+			if stop.Nights != 4 {
+				t.Errorf("Kyoto = %d nights, want 4 — it holds the Nara day too", stop.Nights)
+			}
+		}
+	}
+}
