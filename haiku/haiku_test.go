@@ -30,6 +30,19 @@ func TestSeasonsCannotBeReordered(t *testing.T) {
 	}
 }
 
+func TestEveryPoemNamesItsKigo(t *testing.T) {
+	filed := map[string]string{}
+	for _, p := range Seasons() {
+		if p.Kigo == "" {
+			t.Errorf("no season word: %q", p.Text)
+		}
+		if other, dup := filed[p.Kigo]; dup {
+			t.Errorf("%q files both %q and %q", p.Kigo, other, p.Text)
+		}
+		filed[p.Kigo] = p.Text
+	}
+}
+
 func TestEveryPoemIsThreeLines(t *testing.T) {
 	for _, p := range Seasons() {
 		if got := len(strings.Split(p.Text, "\n")); got != 3 {

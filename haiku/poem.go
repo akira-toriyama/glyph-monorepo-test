@@ -6,4 +6,8 @@ package haiku
 type Poem struct {
 	Text   string
 	Author string
+
+	// Kigo is the season word a saijiki files the poem under, in English and
+	// as one phrase: it is the index key, not a description of the poem.
+	Kigo string
 }
