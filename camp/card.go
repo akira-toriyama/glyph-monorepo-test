@@ -25,7 +25,11 @@ func Card() string {
 }
 
 // weight is the card's only formatting rule; the card is the whole of this
-// module's user-facing text.
+// module's user-facing text. Kilograms once an item reaches one, whole grams
+// below it — a stove at "0.2 kg" tells the reader nothing it can pack around.
 func weight(g int) string {
-	return fmt.Sprintf("%.1f kg", float64(g)/1000)
+	if g >= 1000 {
+		return fmt.Sprintf("%.1f kg", float64(g)/1000)
+	}
+	return fmt.Sprintf("%d g", g)
 }

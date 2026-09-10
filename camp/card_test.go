@@ -21,3 +21,9 @@ func TestCardClosesWithTheTotal(t *testing.T) {
 		t.Fatalf("last line = %q, want the total at 4.8 kg", last)
 	}
 }
+
+func TestCardWeighsASmallItemInGrams(t *testing.T) {
+	if card := Card(); !strings.Contains(card, "210 g") {
+		t.Fatalf("the stove is not weighed in grams:\n%s", card)
+	}
+}
