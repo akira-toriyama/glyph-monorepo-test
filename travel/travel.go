@@ -4,8 +4,6 @@
 // travel (the longest declared prefix wins).
 package travel
 
-import "slices"
-
 // Stop is one town on the itinerary. Nights is what you sleep there, so a day
 // trip is a stop with zero and the bed that night belongs to the stop before
 // it.
@@ -15,25 +13,29 @@ type Stop struct {
 	Nights     int
 }
 
-// route is the itinerary in visiting order.
-var route = []Stop{
-	{Name: "Kyoto", Prefecture: "Kyoto", Nights: 4},
-	{Name: "Nara", Prefecture: "Nara", Nights: 0},
-	{Name: "Kobe", Prefecture: "Osaka", Nights: 1},
-	{Name: "Osaka", Prefecture: "Osaka", Nights: 2},
+// Itinerary is a trip in visiting order. It is the value the package hands out
+// and the receiver every query hangs off, so a second itinerary needs no
+// second set of package-level functions.
+type Itinerary struct {
+	Stops []Stop
 }
 
-// Route is the itinerary; a new stop lands as a minor bump of this module.
-// The result is the caller's to sort, reverse or truncate.
-func Route() []Stop {
-	return slices.Clone(route)
+// Kansai builds its stops fresh on every call: the itinerary it returns,
+// slice included, belongs to the caller.
+func Kansai() Itinerary {
+	return Itinerary{Stops: []Stop{
+		{Name: "Kyoto", Prefecture: "Kyoto", Nights: 4},
+		{Name: "Nara", Prefecture: "Nara", Nights: 0},
+		{Name: "Kobe", Prefecture: "Osaka", Nights: 1},
+		{Name: "Osaka", Prefecture: "Osaka", Nights: 2},
+	}}
 }
 
 // Duration counts nights, not days: the trip spans one more calendar day than
 // this.
-func Duration() int {
+func (it Itinerary) Duration() int {
 	total := 0
-	for _, stop := range route {
+	for _, stop := range it.Stops {
 		total += stop.Nights
 	}
 	return total

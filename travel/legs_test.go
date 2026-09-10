@@ -3,9 +3,10 @@ package travel
 import "testing"
 
 func TestLegsChainFromStopToStop(t *testing.T) {
-	legs := Legs()
-	if got := legs[0].From; got != Route()[0].Name {
-		t.Fatalf("first leg leaves %q, want %q", got, Route()[0].Name)
+	it := Kansai()
+	legs := it.Legs()
+	if got := legs[0].From; got != it.Stops[0].Name {
+		t.Fatalf("first leg leaves %q, want %q", got, it.Stops[0].Name)
 	}
 	for i := 1; i < len(legs); i++ {
 		if legs[i].From != legs[i-1].To {
@@ -15,7 +16,7 @@ func TestLegsChainFromStopToStop(t *testing.T) {
 }
 
 func TestEveryLegNamesItsService(t *testing.T) {
-	for _, leg := range Legs() {
+	for _, leg := range Kansai().Legs() {
 		if leg.Line == "" || leg.Minutes == 0 {
 			t.Errorf("%s to %s has no service in the table", leg.From, leg.To)
 		}
@@ -23,7 +24,7 @@ func TestEveryLegNamesItsService(t *testing.T) {
 }
 
 func TestKobeToOsakaRidesTheSpecialRapid(t *testing.T) {
-	for _, leg := range Legs() {
+	for _, leg := range Kansai().Legs() {
 		if leg.From != "Kobe" || leg.To != "Osaka" {
 			continue
 		}
