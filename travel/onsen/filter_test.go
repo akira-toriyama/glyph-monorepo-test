@@ -41,3 +41,14 @@ func TestWithWaterGathersOneKind(t *testing.T) {
 		t.Errorf(`WithWater("brine") = %v, want nothing`, got)
 	}
 }
+
+func TestWithWaterReadsPartOfThePhrase(t *testing.T) {
+	got := bathNames(WithWater("sulphur"))
+	slices.Sort(got)
+	if want := []string{"Kusatsu", "Noboribetsu"}; !slices.Equal(got, want) {
+		t.Errorf(`WithWater("sulphur") = %v, want %v`, got, want)
+	}
+	if got := bathNames(WithWater("")); len(got) != 0 {
+		t.Errorf(`WithWater("") = %v, want nothing`, got)
+	}
+}
