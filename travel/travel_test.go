@@ -15,3 +15,9 @@ func TestEveryStopIsInTheNightsTable(t *testing.T) {
 		}
 	}
 }
+
+func TestDurationSumsTheNights(t *testing.T) {
+	if got := Duration(); got != 7 {
+		t.Fatalf("Duration() = %d nights, want 7", got)
+	}
+}

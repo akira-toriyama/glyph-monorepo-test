@@ -25,3 +25,13 @@ func Route() []string {
 func Nights(stop string) int {
 	return nights[stop]
 }
+
+// Duration counts nights, not days: the trip spans one more calendar day than
+// this.
+func Duration() int {
+	total := 0
+	for _, stop := range route {
+		total += nights[stop]
+	}
+	return total
+}
