@@ -3,6 +3,7 @@ package curry
 import (
 	"strings"
 	"testing"
+	"time"
 )
 
 // Roux stirred into a boiling pot seizes and never dissolves, so the step that
@@ -50,5 +51,25 @@ func TestTheWaterGoesInBoiling(t *testing.T) {
 		if strings.Contains(s.Text, "water") && !strings.Contains(s.Text, "boiling") {
 			t.Fatalf("water step %q pours it in cold", s.Text)
 		}
+	}
+}
+
+// The point of the split: a pot with no long unattended stretch cannot be
+// started while the guests are already in the house.
+func TestThePotCooksAloneForALongStretch(t *testing.T) {
+	if alone := Duration() - HandsOn(); alone < 20*time.Minute {
+		t.Fatalf("unattended %s of %s", alone, Duration())
+	}
+}
+
+func TestDurationCountsTheRest(t *testing.T) {
+	var upToTheLastStir time.Duration
+	for _, s := range Method() {
+		if !strings.HasPrefix(s.Text, "rest") {
+			upToTheLastStir += time.Duration(s.Minutes) * time.Minute
+		}
+	}
+	if Duration() <= upToTheLastStir {
+		t.Fatalf("Duration %s stops at the last stir", Duration())
 	}
 }

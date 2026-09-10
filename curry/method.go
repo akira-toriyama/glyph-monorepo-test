@@ -1,5 +1,7 @@
 package curry
 
+import "time"
+
 // Step is one instruction. Minutes is elapsed time, not attention: Stir marks
 // the stretches a cook cannot walk away from.
 type Step struct {
@@ -21,4 +23,25 @@ func Method() []Step {
 		{Text: "back on the lowest flame, thicken uncovered", Minutes: 8, Stir: true},
 		{Text: "rest off the heat before serving", Minutes: 10},
 	}
+}
+
+// Duration counts the rest as well as the cooking: a cook plans backwards from
+// the table, and ten minutes off the heat is still ten minutes.
+func Duration() time.Duration {
+	var d time.Duration
+	for _, s := range Method() {
+		d += time.Duration(s.Minutes) * time.Minute
+	}
+	return d
+}
+
+// HandsOn is the share of Duration the kitchen cannot be left for.
+func HandsOn() time.Duration {
+	var d time.Duration
+	for _, s := range Method() {
+		if s.Stir {
+			d += time.Duration(s.Minutes) * time.Minute
+		}
+	}
+	return d
 }
