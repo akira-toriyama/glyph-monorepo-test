@@ -22,3 +22,23 @@ func TestEveryStepTakesTime(t *testing.T) {
 		}
 	}
 }
+
+// Foam is protein that has nowhere to go once the lid is on; it settles back
+// into the sauce and turns it grey.
+func TestSkimComesBeforeTheLid(t *testing.T) {
+	skim, lid := -1, -1
+	for i, s := range Method() {
+		switch {
+		case strings.HasPrefix(s.Text, "skim"):
+			skim = i
+		case strings.HasPrefix(s.Text, "cover"):
+			lid = i
+		}
+	}
+	if skim < 0 || lid < 0 {
+		t.Fatalf("the method lost the skim (%d) or the lid (%d)", skim, lid)
+	}
+	if skim > lid {
+		t.Errorf("skim at step %d, lid at step %d", skim, lid)
+	}
+}
