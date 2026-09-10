@@ -1,27 +1,37 @@
 package haiku
 
-// Spring is Buson's spring sea.
-func Spring() string {
-	return "the spring sea\nrising and falling, rising\nand falling all day"
-}
+var (
+	spring = Poem{
+		Text:   "the spring sea\nrising and falling, rising\nand falling all day",
+		Author: "Yosa Buson",
+	}
 
-// Summer is Bashō's summer grasses.
-func Summer() string {
-	return "the summer grasses —\nall that remains\nof the warriors' dreams"
-}
+	summer = Poem{
+		Text:   "the summer grasses —\nall that remains\nof the warriors' dreams",
+		Author: "Matsuo Bashō",
+	}
 
-// Autumn is Bashō's old pond, carried from the bootstrap commit unchanged.
-func Autumn() string {
-	return "an old silent pond\na frog jumps into the pond —\nsplash! silence again"
-}
+	autumn = Poem{
+		Text:   "an old silent pond\na frog jumps into the pond —\nsplash! silence again",
+		Author: "Matsuo Bashō",
+	}
 
-// Winter is Bashō's first winter rain.
-func Winter() string {
-	return "first winter rain—\neven the monkey seems to want\na little straw coat"
-}
+	winter = Poem{
+		Text:   "first winter rain—\neven the monkey seems to want\na little straw coat",
+		Author: "Matsuo Bashō",
+	}
+)
 
-// Seasons hands back the year in calendar order, which is not the order the
-// seasons were added in.
-func Seasons() []string {
-	return []string{Spring(), Summer(), Autumn(), Winter()}
-}
+// year is calendar order, which is not the order the poems were added in.
+var year = []Poem{spring, summer, autumn, winter}
+
+func Spring() Poem { return spring }
+
+func Summer() Poem { return summer }
+
+func Autumn() Poem { return autumn }
+
+func Winter() Poem { return winter }
+
+// Seasons hands back the whole year in one call.
+func Seasons() []Poem { return year }

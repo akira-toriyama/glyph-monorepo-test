@@ -13,14 +13,22 @@ func TestSeasonsHoldsEverySeason(t *testing.T) {
 
 func TestSeasonsOpensOnSpring(t *testing.T) {
 	if got := Seasons()[0]; got != Spring() {
-		t.Fatalf("the year opens on %q", got)
+		t.Fatalf("the year opens on %q", got.Text)
 	}
 }
 
-func TestEverySeasonIsThreeLines(t *testing.T) {
-	for _, poem := range Seasons() {
-		if got := len(strings.Split(poem, "\n")); got != 3 {
-			t.Errorf("lines = %d, want 3: %q", got, poem)
+func TestEveryPoemIsThreeLines(t *testing.T) {
+	for _, p := range Seasons() {
+		if got := len(strings.Split(p.Text, "\n")); got != 3 {
+			t.Errorf("%s: lines = %d, want 3", p.Author, got)
+		}
+	}
+}
+
+func TestEveryPoemNamesItsPoet(t *testing.T) {
+	for _, p := range Seasons() {
+		if p.Author == "" {
+			t.Errorf("no poet: %q", p.Text)
 		}
 	}
 }
