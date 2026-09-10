@@ -17,7 +17,7 @@ func Method() []Step {
 		{Text: "pour in boiling water and bring the pot back up", Minutes: 2},
 		{Text: "skim the grey foam off the surface", Minutes: 2, Stir: true},
 		{Text: "cover and simmer until a skewer slides through the carrot", Minutes: 20},
-		{Text: "off the heat, melt the roux in a ladle at a time", Minutes: 4, Stir: true},
+		{Text: "off the heat, stir the blend in and melt the roux", Minutes: 4, Stir: true},
 		{Text: "back on the lowest flame, thicken uncovered", Minutes: 8, Stir: true},
 		{Text: "rest off the heat before serving", Minutes: 10},
 	}

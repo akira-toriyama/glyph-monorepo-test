@@ -13,12 +13,18 @@ type Ingredient struct {
 
 // Recipe is four plates, listed in the order the ingredients go into the pot.
 // Water is an ingredient because the roux is weighed against it, not guessed.
+// The four ground spices are single-figure weights on purpose: they are what
+// separates this from the sauce that comes out of the box alone.
 func Recipe() []Ingredient {
 	return []Ingredient{
 		{Name: "onion", Grams: 400, Prep: "sliced along the grain"},
 		{Name: "carrot", Grams: 200, Prep: "rolling-cut"},
 		{Name: "sweet potato", Grams: 300, Prep: "3cm cubes"},
 		{Name: "water", Grams: 800},
+		{Name: "cumin", Grams: 6, Prep: "ground"},
+		{Name: "coriander", Grams: 8, Prep: "ground"},
+		{Name: "turmeric", Grams: 4, Prep: "ground"},
+		{Name: "cayenne", Grams: 2, Prep: "ground"},
 		{Name: "roux", Grams: 120, Prep: "broken into squares"},
 	}
 }

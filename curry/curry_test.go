@@ -33,3 +33,19 @@ func TestRouxCarriesTheWater(t *testing.T) {
 		t.Fatalf("%dg of roux against %dg of water is thinner than 1:7", roux, water)
 	}
 }
+
+// The blend is four weighed lines rather than one "curry powder": a cook who
+// is out of cayenne still has a curry, and the recipe has to be able to say so.
+func TestTheBlendIsInThePot(t *testing.T) {
+	blend := map[string]bool{"cumin": false, "coriander": false, "turmeric": false, "cayenne": false}
+	for _, ing := range Recipe() {
+		if _, ok := blend[ing.Name]; ok {
+			blend[ing.Name] = true
+		}
+	}
+	for name, found := range blend {
+		if !found {
+			t.Errorf("%s is not in the recipe", name)
+		}
+	}
+}
