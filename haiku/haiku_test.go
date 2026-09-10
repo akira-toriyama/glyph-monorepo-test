@@ -15,9 +15,9 @@ func TestSeasonsHoldsEverySeason(t *testing.T) {
 	}
 }
 
-func TestSeasonsOpensOnSpring(t *testing.T) {
-	if got := Seasons()[0]; got != Spring() {
-		t.Fatalf("the year opens on %q", got.Text)
+func TestSeasonsOpensOnTheNewYear(t *testing.T) {
+	if got := Seasons()[0]; got != NewYear() {
+		t.Fatalf("the book opens on %q", got.Text)
 	}
 }
 
