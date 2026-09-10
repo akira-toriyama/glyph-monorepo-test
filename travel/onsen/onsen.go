@@ -5,5 +5,5 @@ package onsen
 
 // Baths is the list of hot springs; a new bath lands as a minor bump of this module.
 func Baths() []string {
-	return []string{"Kusatsu", "Beppu"}
+	return []string{"Kusatsu", "Beppu", "Noboribetsu"}
 }
