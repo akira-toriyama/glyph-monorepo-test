@@ -17,3 +17,15 @@ func TestByKigoMissesAWordNoPoemCarries(t *testing.T) {
 		t.Fatalf("no poem here carries the cherry blossom, but %q answered", got.Text)
 	}
 }
+
+func TestByKigoMissesTheEmptyWord(t *testing.T) {
+	if got, ok := ByKigo(""); ok {
+		t.Fatalf("the empty string is no season word, but %q answered", got.Text)
+	}
+}
+
+func TestByKigoMissesHalfAWord(t *testing.T) {
+	if got, ok := ByKigo("rain"); ok {
+		t.Fatalf("the season word is the first winter rain, but %q answered", got.Text)
+	}
+}
