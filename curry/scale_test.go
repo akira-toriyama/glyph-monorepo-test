@@ -29,3 +29,11 @@ func TestForKeepsThePrep(t *testing.T) {
 		}
 	}
 }
+
+func TestForRefusesAPotBelowOnePlate(t *testing.T) {
+	for _, plates := range []int{0, -1, -2} {
+		if got := For(plates); got != nil {
+			t.Errorf("For(%d) = %+v, want nil", plates, got)
+		}
+	}
+}
