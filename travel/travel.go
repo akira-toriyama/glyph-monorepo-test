@@ -6,5 +6,5 @@ package travel
 
 // Route is the itinerary; a new stop lands as a minor bump of this module.
 func Route() []string {
-	return []string{"Kyoto", "Nara", "Osaka"}
+	return []string{"Kyoto", "Nara", "Osaka", "Kobe"}
 }
