@@ -10,9 +10,9 @@ func TestBathsAreNamed(t *testing.T) {
 
 func TestEveryBathIsPlacedAndTyped(t *testing.T) {
 	want := map[string]Bath{
-		"Kusatsu":     {Name: "Kusatsu", Prefecture: "Gunma", Water: "acidic sulphur"},
-		"Beppu":       {Name: "Beppu", Prefecture: "Oita", Water: "simple alkaline"},
-		"Noboribetsu": {Name: "Noboribetsu", Prefecture: "Aomori", Water: "sulphur"},
+		"Kusatsu":     {Name: "Kusatsu", Prefecture: "Gunma", Water: "acidic sulphur", SourceC: 41},
+		"Beppu":       {Name: "Beppu", Prefecture: "Oita", Water: "simple alkaline", SourceC: 60},
+		"Noboribetsu": {Name: "Noboribetsu", Prefecture: "Aomori", Water: "sulphur", SourceC: 45},
 	}
 	got := All()
 	if len(got) != len(want) {
