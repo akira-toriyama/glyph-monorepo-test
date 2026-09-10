@@ -27,11 +27,13 @@ func CategoryOf(item string) (c Category, ok bool) {
 	return c, ok
 }
 
-// In returns the items filed under c.
+// In returns the items filed under c, in list order. It walks Gear rather than
+// the category map because ranging a map is unordered, and the result is read
+// as a packing sequence.
 func In(c Category) []string {
 	var items []string
-	for item, filed := range category {
-		if filed == c {
+	for _, item := range Gear() {
+		if category[item] == c {
 			items = append(items, item)
 		}
 	}

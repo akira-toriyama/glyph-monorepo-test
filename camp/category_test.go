@@ -13,8 +13,9 @@ func TestEveryItemIsFiled(t *testing.T) {
 	}
 }
 
-func TestTheStoveIsInTheKitchen(t *testing.T) {
-	if got := In(Kitchen); !slices.Contains(got, "gas stove") {
-		t.Fatalf("In(Kitchen) = %q, want the gas stove among them", got)
+func TestInReadsTheKitchenInListOrder(t *testing.T) {
+	want := []string{"gas stove", "water filter"}
+	if got := In(Kitchen); !slices.Equal(got, want) {
+		t.Fatalf("In(Kitchen) = %q, want %q", got, want)
 	}
 }
