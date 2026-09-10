@@ -34,6 +34,30 @@ func TestAVolumeCannotBeReordered(t *testing.T) {
 	}
 }
 
+func TestSomeVolumeHoldsMoreThanOnePoem(t *testing.T) {
+	for _, s := range Year() {
+		if len(Of(s)) > 1 {
+			return
+		}
+	}
+	t.Fatal("every volume still holds exactly one poem")
+}
+
+func TestAutumnKeepsTheCrow(t *testing.T) {
+	if !holdsKigo(Of(Autumn), "autumn nightfall") {
+		t.Fatal("the crow is filed under no season")
+	}
+}
+
+func holdsKigo(volume []Poem, kigo string) bool {
+	for _, p := range volume {
+		if p.Kigo == kigo {
+			return true
+		}
+	}
+	return false
+}
+
 func TestEveryPoemIsThreeLines(t *testing.T) {
 	for _, p := range Poems() {
 		if got := len(strings.Split(p.Text, "\n")); got != 3 {

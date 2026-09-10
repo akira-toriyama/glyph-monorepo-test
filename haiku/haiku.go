@@ -31,6 +31,11 @@ var saijiki = map[Season][]Poem{
 			Author: "Matsuo Bashō",
 			Kigo:   "frog",
 		},
+		{
+			Text:   "on a bare branch\na crow has alighted —\nautumn nightfall",
+			Author: "Matsuo Bashō",
+			Kigo:   "autumn nightfall",
+		},
 	},
 	Winter: {
 		{
