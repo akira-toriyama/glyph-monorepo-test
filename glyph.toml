@@ -94,3 +94,11 @@ title = "Fixes"
 [[note.sections]]
 author = 'dependabot[bot]'
 title = "Dependencies"
+
+# The harness's two version lines (glyph DESIGN §4.1): each module's tags are
+# <path>/vX.Y.Z, and a commit moves the line its own diff touches.
+[[packages]]
+path = "haiku"
+
+[[packages]]
+path = "curry"
