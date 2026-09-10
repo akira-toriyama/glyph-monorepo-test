@@ -17,6 +17,7 @@ var category = map[string]Category{
 	"sleeping mat": Shelter,
 	"sleeping bag": Sleep,
 	"gas stove":    Kitchen,
+	"water filter": Kitchen,
 }
 
 // CategoryOf reports the bag an item rides in. ok is false for a name that is

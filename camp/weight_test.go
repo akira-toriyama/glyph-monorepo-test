@@ -11,7 +11,7 @@ func TestEveryItemIsWeighed(t *testing.T) {
 }
 
 func TestPackWeightTotalsTheList(t *testing.T) {
-	if got, want := PackWeight(), 3990; got != want {
+	if got, want := PackWeight(), 4340; got != want {
 		t.Fatalf("PackWeight() = %d g, want %d g", got, want)
 	}
 }
