@@ -25,3 +25,10 @@ func TestMissingAnswersInListOrder(t *testing.T) {
 		t.Fatalf("Missing() = %q, want %q", got, want)
 	}
 }
+
+func TestMissingReadsAHandTypedPack(t *testing.T) {
+	got := names(Missing([]string{"Tent", "  sleeping BAG "}))
+	if slices.Contains(got, "tent") || slices.Contains(got, "sleeping bag") {
+		t.Fatalf("still missing %q after both were packed", got)
+	}
+}
