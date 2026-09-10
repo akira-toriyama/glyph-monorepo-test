@@ -49,6 +49,15 @@ func TestAutumnKeepsTheCrow(t *testing.T) {
 	}
 }
 
+func TestTheFrogIsFiledUnderSpring(t *testing.T) {
+	if !holdsKigo(Of(Spring), "frog") {
+		t.Error("spring does not hold the old pond")
+	}
+	if holdsKigo(Of(Autumn), "frog") {
+		t.Error("autumn still holds the old pond")
+	}
+}
+
 func holdsKigo(volume []Poem, kigo string) bool {
 	for _, p := range volume {
 		if p.Kigo == kigo {

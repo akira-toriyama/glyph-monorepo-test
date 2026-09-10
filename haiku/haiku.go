@@ -17,6 +17,11 @@ var saijiki = map[Season][]Poem{
 			Author: "Yosa Buson",
 			Kigo:   "the spring sea",
 		},
+		{
+			Text:   "an old silent pond\na frog jumps into the pond —\nsplash! silence again",
+			Author: "Matsuo Bashō",
+			Kigo:   "frog",
+		},
 	},
 	Summer: {
 		{
@@ -26,11 +31,6 @@ var saijiki = map[Season][]Poem{
 		},
 	},
 	Autumn: {
-		{
-			Text:   "an old silent pond\na frog jumps into the pond —\nsplash! silence again",
-			Author: "Matsuo Bashō",
-			Kigo:   "frog",
-		},
 		{
 			Text:   "on a bare branch\na crow has alighted —\nautumn nightfall",
 			Author: "Matsuo Bashō",
