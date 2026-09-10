@@ -1,13 +1,17 @@
 package haiku
 
 import (
+	"slices"
 	"strings"
 	"testing"
 )
 
 func TestSeasonsHoldsEverySeason(t *testing.T) {
-	if got := len(Seasons()); got != 4 {
-		t.Fatalf("poems = %d, want 4", got)
+	if got := len(Seasons()); got != 5 {
+		t.Fatalf("poems = %d, want 5", got)
+	}
+	if !slices.Contains(Seasons(), NewYear()) {
+		t.Error("the new year is filed nowhere")
 	}
 }
 
