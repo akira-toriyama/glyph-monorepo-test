@@ -6,3 +6,8 @@ package haiku
 func Autumn() string {
 	return "an old silent pond\na frog jumps into the pond—\nsplash! silence again"
 }
+
+// Winter is the second season; a new season lands as a minor bump of this module.
+func Winter() string {
+	return "first winter rain—\neven the monkey seems to want\na little straw coat"
+}
