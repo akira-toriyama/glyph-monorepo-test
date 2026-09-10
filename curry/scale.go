@@ -15,7 +15,9 @@ func For(plates int) []Ingredient {
 	scaled := make([]Ingredient, len(base))
 	for i, ing := range base {
 		scaled[i] = ing
-		scaled[i].Grams = ing.Grams * plates / baseServings
+		// Round up. Truncating divided 2g of cayenne to nothing at one plate,
+		// and a spice that rounds away is a different curry.
+		scaled[i].Grams = (ing.Grams*plates + baseServings - 1) / baseServings
 	}
 	return scaled
 }

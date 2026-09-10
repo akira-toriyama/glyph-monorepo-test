@@ -37,3 +37,14 @@ func TestForRefusesAPotBelowOnePlate(t *testing.T) {
 		}
 	}
 }
+
+// The small pot is where the blend disappears; cayenne is the first to go.
+func TestNoIngredientScalesAwayToNothing(t *testing.T) {
+	for plates := 1; plates <= 12; plates++ {
+		for _, ing := range For(plates) {
+			if ing.Grams < 1 {
+				t.Errorf("For(%d): %s came out at %dg", plates, ing.Name, ing.Grams)
+			}
+		}
+	}
+}
