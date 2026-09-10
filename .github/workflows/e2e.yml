@@ -787,8 +787,13 @@ jobs:
           assert_eq wc-pr11-lines "$(jq -r '[.packages[] | "\(.path):\(.level):\(.next // "-")"] | join("|")' "$O.json")" 'travel/onsen:minor:v0.1.0'
           O="$RUNNER_TEMP/wc3"; run_glyph "$O.md" "$O.err" preview --pr 10 --repo "$REPO"
           assert_rc wc-pr10-md 0
-          assert_matches wc-pr10-headline-travel "$O.md" '^\*\*travel\*\* — .*travel/v0\.0\.0 → travel/v0\.1\.0'
-          assert_matches wc-pr10-headline-camp   "$O.md" '^\*\*camp\*\* — .*camp/v0\.0\.0 → camp/v0\.0\.1'
+          # #10 is MERGED, so its commits already sit on the pending side and
+          # the headline reads "the next release stays travel/v0.1.0 (a minor
+          # bump is already pending)" — measured 2026-09-10 — rather than the
+          # "travel/v0.0.0 → travel/v0.1.0" a pull renders before it lands.
+          # Both shapes lead with the line's name and carry its next tag.
+          assert_matches wc-pr10-headline-travel "$O.md" '^\*\*travel\*\* — .*\*\*travel/v0\.1\.0\*\*'
+          assert_matches wc-pr10-headline-camp   "$O.md" '^\*\*camp\*\* — .*\*\*camp/v0\.0\.1\*\*'
           assert_no_line_matching wc-pr10-no-onsen "$O.md" '^\*\*travel/onsen\*\*'
 
       - name: "(d) notes answer under a # <path> heading per line, and a line that moved nothing has none"
