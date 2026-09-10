@@ -13,8 +13,8 @@ func (it Itinerary) String() string {
 	var b strings.Builder
 	for i, stop := range it.Stops {
 		fmt.Fprintf(&b, "%-6s %-8s %-9s", stop.Name, "("+stop.Prefecture+")", stay(stop.Nights))
-		if i < len(legs) {
-			fmt.Fprintf(&b, " in on the %s, %d min", legs[i].Line, legs[i].Minutes)
+		if i > 0 {
+			fmt.Fprintf(&b, " in on the %s, %d min", legs[i-1].Line, legs[i-1].Minutes)
 		}
 		b.WriteString("\n")
 	}

@@ -28,3 +28,13 @@ func TestSheetNamesEveryTownAndItsPrefecture(t *testing.T) {
 		}
 	}
 }
+
+func TestTheRideOnARowIsTheOneYouArriveOn(t *testing.T) {
+	sheet := rows(t)
+	if strings.Contains(sheet[0], "in on") {
+		t.Errorf("Kyoto's row = %q, want no ride in — the trip starts there", sheet[0])
+	}
+	if last := sheet[len(sheet)-1]; !strings.Contains(last, "JR special rapid") {
+		t.Fatalf("Osaka's row = %q, want the JR special rapid it arrives on", last)
+	}
+}
