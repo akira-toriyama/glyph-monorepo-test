@@ -40,8 +40,13 @@ jobs:
     if: ${{ !cancelled() && needs.release.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # write, not read: GitHub lists DRAFT releases only to a token with push
+    # access, so a read-only token sees an empty list and the assertion below
+    # reports a draft the release job just wrote as missing. Measured on the
+    # rc.2 live run (34483701517): haiku/v0.1.1 stood, the read saw nothing.
+    # The job still writes nothing.
     permissions:
-      contents: read
+      contents: write
     env:
       GH_TOKEN: ${{ github.token }}
       DRY_RUN: ${{ github.event.inputs.dry_run }}
