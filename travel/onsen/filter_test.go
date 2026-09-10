@@ -1,6 +1,9 @@
 package onsen
 
-import "testing"
+import (
+	"slices"
+	"testing"
+)
 
 func bathNames(baths []Bath) []string {
 	out := make([]string, 0, len(baths))
@@ -16,5 +19,16 @@ func TestHotterTakesAllOfTheGuideAndNoneOfIt(t *testing.T) {
 	}
 	if got := bathNames(Hotter(70)); len(got) != 0 {
 		t.Errorf("Hotter(70) = %v, want nothing", got)
+	}
+}
+
+func TestHotterLeavesTheGuideAlone(t *testing.T) {
+	before := All()
+	if got := bathNames(Hotter(55)); len(got) != 1 {
+		t.Fatalf("Hotter(55) = %v, want one bath", got)
+	}
+	if after := All(); !slices.Equal(before, after) {
+		t.Fatalf("the guide reads %v after one filter, want %v",
+			bathNames(after), bathNames(before))
 	}
 }
