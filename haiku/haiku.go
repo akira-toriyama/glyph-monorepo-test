@@ -19,3 +19,8 @@ func Spring() string {
 func Summer() string {
 	return "the summer grasses —\nall that remains\nof the warriors' dreams"
 }
+
+// Seasons hands back the whole year in one call.
+func Seasons() []string {
+	return []string{Autumn(), Winter(), Spring(), Summer()}
+}
