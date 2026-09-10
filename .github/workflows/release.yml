@@ -1,0 +1,108 @@
+name: Release
+
+# The live-fire caller of glyph's reusable release.yml in packages mode: one
+# rolling draft per declared line (haiku/, curry/), the reusable's four scalar
+# outputs "" and `packages` carrying every line's verdict. The read-back job is
+# the harness's assertion — the reusable's contract, checked against the live
+# releases list after every push to main.
+#
+# Pin: @vX.Y.Z and nothing else (a moving ref cannot resolve a binary). The
+# fleet's rewriter moves it; a candidate release is tested here first.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Preview only (no draft write)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: akira-toriyama/glyph/.github/workflows/release.yml@v3.3.0-rc.1
+    with:
+      dry-run: ${{ github.event.inputs.dry_run == 'true' }}
+      install-notes: |
+        Nothing to install — each module is fetched with `go get` at its own tag.
+    permissions:
+      contents: write
+
+  read-back:
+    needs: release
+    if: ${{ !cancelled() && needs.release.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DRY_RUN: ${{ github.event.inputs.dry_run }}
+      LEVEL: ${{ needs.release.outputs.level }}
+      NEXT: ${{ needs.release.outputs.next }}
+      CURRENT: ${{ needs.release.outputs.current }}
+      ACTION: ${{ needs.release.outputs.action }}
+      PACKAGES: ${{ needs.release.outputs.packages }}
+    steps:
+      # The contract, both halves: on a packages repository the scalars are
+      # "" (a single-line caller must fail safe on them) and `packages` is one
+      # JSON array with exactly the declared lines, in config order.
+      - name: Assert the outputs answer per line and the scalars are empty
+        run: |
+          set -euo pipefail
+          for v in LEVEL NEXT CURRENT ACTION; do
+            if [ -n "${!v}" ]; then
+              echo "::error::scalar output $v is '${!v}' on a packages repository — it must be empty (there is no one line for it to describe)"
+              exit 1
+            fi
+          done
+          if [ -z "$PACKAGES" ]; then
+            echo "::error::the packages output is empty — the reusable computed no per-line verdict"
+            exit 1
+          fi
+          paths="$(printf '%s' "$PACKAGES" | jq -r 'map(.path) | join(" ")')"
+          if [ "$paths" != "haiku curry" ]; then
+            echo "::error::packages lists '$paths', want 'haiku curry' (every declared line, in config order)"
+            exit 1
+          fi
+          # The array is handed through minus each line's body and url.
+          if printf '%s' "$PACKAGES" | jq -e 'map(has("body") or has("url")) | any' >/dev/null; then
+            echo "::error::packages carries a line's body or url — both are stripped by contract"
+            exit 1
+          fi
+          printf '%s' "$PACKAGES" | jq -r '.[] | "\(.path): \(.current) -> \(.level) \(.tag // "-") (draft \(.action))"'
+
+      # The releases list agrees with the verdict: every line whose verdict
+      # names a tag has exactly one glyph-managed draft carrying that tag, and
+      # no line has two drafts. A dry run wrote nothing, so this half is
+      # skipped there — the outputs half above still ran.
+      - name: Assert one draft per line in the live releases list
+        if: env.DRY_RUN != 'true'
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            --jq '.[] | select(.draft) | .tag_name' > drafts.txt
+          echo "drafts standing:"; cat drafts.txt
+          for line in haiku curry; do
+            n="$(grep -c "^$line/v" drafts.txt || true)"
+            if [ "$n" -gt 1 ]; then
+              echo "::error::$line has $n drafts — the reusable must keep at most one per line"
+              exit 1
+            fi
+            want="$(printf '%s' "$PACKAGES" | jq -r --arg p "$line" '.[] | select(.path == $p) | .tag // empty')"
+            if [ -n "$want" ] && ! grep -qx "$want" drafts.txt; then
+              echo "::error::$line's verdict names draft $want and the releases list has no such draft"
+              exit 1
+            fi
+          done
+          if grep -q '^v[0-9]' drafts.txt; then
+            echo "::error::a bare vX.Y.Z draft stands — this repository declares no root package, so it is the single line's residue and must have been converged away"
+            exit 1
+          fi
