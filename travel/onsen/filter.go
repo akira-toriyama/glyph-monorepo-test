@@ -12,3 +12,14 @@ func Hotter(minC int) []Bath {
 	}
 	return out
 }
+
+// WithWater returns the baths whose analysis board posts kind.
+func WithWater(kind string) []Bath {
+	out := make([]Bath, 0, len(baths))
+	for _, b := range baths {
+		if b.Water == kind {
+			out = append(out, b)
+		}
+	}
+	return out
+}
