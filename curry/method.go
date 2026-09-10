@@ -47,3 +47,14 @@ func HandsOn() time.Duration {
 	}
 	return d
 }
+
+// Reheat is the day-two pot, which is the one worth making a big batch for:
+// the starch keeps swelling overnight, so the sauce comes out of the fridge
+// thicker than it went in.
+func Reheat() []Step {
+	return []Step{
+		{Text: "loosen the cold pot with a splash of water", Minutes: 1, Stir: true},
+		{Text: "bring it back to a boil uncovered", Minutes: 6, Stir: true},
+		{Text: "taste for salt — a night in the fridge flattens it", Minutes: 1, Stir: true},
+	}
+}
