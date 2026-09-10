@@ -46,3 +46,15 @@ func TestTravelTimeSumsTheLegs(t *testing.T) {
 		t.Fatalf("TravelTime() = %d min, want %d", got, want)
 	}
 }
+
+func TestLegsStopAtTheLastStop(t *testing.T) {
+	it := Kansai()
+	legs := it.Legs()
+	if len(legs) != len(it.Stops)-1 {
+		t.Fatalf("%d legs for %d stops, want one fewer leg than stops", len(legs), len(it.Stops))
+	}
+	last := legs[len(legs)-1]
+	if want := it.Stops[len(it.Stops)-1].Name; last.To != want {
+		t.Fatalf("last leg arrives at %q, want %q", last.To, want)
+	}
+}
