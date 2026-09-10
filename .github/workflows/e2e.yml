@@ -1,0 +1,996 @@
+# glyph's packages mode (DESIGN §4.1), fired with live ammunition, in tiers
+# that each own one question and say what would have to break to go red. The
+# shape — one binary built from the ref under test, a kit of assertion helpers
+# with canaries, refusals read out of the JSON envelope and never off the raw
+# stream, frozen coordinates rather than moving heads — is glyph-test's
+# e2e-v2.yml, which this file follows deliberately: a second harness with a
+# second idea of what an assertion is would prove less than one with the same.
+#
+# What this harness adds is the one thing glyph-test cannot ask: several
+# version lines in one repository. Five are declared (haiku, curry, travel,
+# travel/onsen, camp), travel/onsen NESTED inside travel so the longest-prefix
+# rule is exercised for real, and every expected value below is a
+# transcription of output measured against the binary at v3.3.0 on
+# 2026-09-10 — not a prediction.
+#
+# Tiers:
+#   build         one stamped binary, asserted to name the ref asked for
+#   attribution   the rules of DESIGN §4.1 on a fixture built from nothing,
+#                 no credential — path decides, scope carries what path
+#                 cannot, a shared-only sigil is a refusal, a contradiction is
+#                 a refusal, a rename moves both lines, a nested line takes its
+#                 files out of its parent, an untagged line baselines at v0.0.0
+#   walk          the same rules at this repository's FROZEN coordinates, over
+#                 the API (squash-merged pulls, whose inner commits exist on no
+#                 branch); one tag converges one line alone; preview per line
+#   drafts        one real write: a bare vX.Y.Z draft is the single line's
+#                 residue and is deleted with a notice, and every line's draft
+#                 count stays ≤ 1 — then the repository is left as release.yml
+#                 expects it
+#   distribution  every glyph pin site here resolves to one version
+name: e2e
+
+run-name: e2e — glyph-ref=${{ inputs.glyph-ref }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      glyph-ref:
+        description: "glyph ref to build the binary from (branch, tag or SHA)"
+        type: string
+        default: main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.identity.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: akira-toriyama/glyph
+          ref: ${{ inputs.glyph-ref }}
+          # build.sh stamps the version with `git describe --tags`, which needs
+          # the tags and the history behind them.
+          fetch-depth: 0
+          persist-credentials: false
+          path: glyph
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: glyph/go.mod
+          # The build below compiles whatever ref the dispatcher named, and a
+          # dispatch runs in the DEFAULT BRANCH's cache scope — so a populated
+          # module cache here is written by one ref and read by every later run
+          # of every workflow in this repository. CodeQL flagged exactly that
+          # (run 32032336673, "Cache Poisoning via execution of untrusted
+          # code"); the file this replaced carried `cache: false` and the
+          # rebuild lost it. A cold module download costs seconds and this job
+          # runs on demand.
+          cache: false
+
+      # `sh build.sh`, NOT `go build ./cmd/glyph`: build.sh is what stamps the
+      # version, and an unstamped binary makes every identity claim below —
+      # and the artifact round-trip assertion in four other jobs — vacuous.
+      - name: Build glyph from source
+        run: sh build.sh
+        working-directory: glyph
+
+      - name: Assert the binary is the ref that was asked for
+        id: identity
+        working-directory: glyph
+        env:
+          # Through the environment, never interpolated into the script: a
+          # workflow_dispatch input is attacker-controlled text as far as
+          # zizmor's template-injection rule is concerned, and it is right.
+          GLYPH_REF: ${{ inputs.glyph-ref }}
+        run: |
+          set -euo pipefail
+          # NOT `go version -m … vcs.revision`: build.sh builds with -trimpath,
+          # which suppresses VCS stamping outright, so that field is empty for
+          # every ref and the check would pass by being blank on both sides.
+          want="$(git rev-parse --short HEAD)"
+          got="$(bin/glyph --version)"
+          echo "ref=$GLYPH_REF  checkout=$want  binary=$got"
+          case "$got" in
+            *"($want,"*) ;;
+            *) echo "::error::the binary does not name $want — it was built from some other tree"; exit 1 ;;
+          esac
+          echo "version=$got" >> "$GITHUB_OUTPUT"
+          # There is deliberately no marker-string half here (livefire.yml
+          # greps the binary for two mutually exclusive strings). This file's
+          # negative controls are DISPATCHES at older refs — see the header for
+          # what each one reds, measured — not a grep that goes stale the
+          # moment the string it hunts is reworded.
+
+      - name: Stage the kit every other tier runs
+        run: |
+          set -euo pipefail
+          mkdir -p kit
+          cp glyph/bin/glyph kit/glyph
+          cat > kit/assert.sh <<'SH'
+          # One home for what an assertion means in this file, shipped in the
+          # build artifact so a fix here cannot land in five jobs at four
+          # different vintages.
+          #
+          # Two shapes are load-bearing and neither is style:
+          #
+          #   * `|| RC=$?`, never a bare call. A `run:` block is `bash -e`, and
+          #     a non-zero exit is the NORMAL path for most arms in this file —
+          #     a bare call kills the step before the assertion it exists for.
+          #   * a claim about a REFUSAL is read out of `.error.message` through
+          #     `envelope`, never off the raw stream. Measured 2026-08-17: a
+          #     dry run refused by the published floor exits 4 while stderr also
+          #     carries the ref guard's dry-run notice, so `rc == 4` plus the
+          #     clause anywhere on stderr is satisfied by a run where the ref
+          #     guard never fired. `assert_matches` is the one helper that does
+          #     read the raw stream, and it is for NOTICES and WARNINGS only —
+          #     glyph has no other channel for those.
+          #
+          # Every helper below is exercised twice by `assert_canaries`: once on
+          # a fixture it must accept, once on a fixture it must reject. A helper
+          # shown only to accept could be `return 0`; one shown only to reject
+          # could be `return 1`.
+
+          RC=0
+
+          run_glyph() {                     # run_glyph <out> <err> <args…>
+            # GLYPH_ENV, when set, is a single NAME=VALUE this arm needs in
+            # glyph's environment and nowhere else. A step-level `env:` cannot
+            # say "for this one process", and the ref-guard arms need exactly
+            # that: the surrounding steps must keep the runner's real ref.
+            local out="$1" err="$2"; shift 2
+            RC=0
+            if [ -n "${GLYPH_ENV:-}" ]; then
+              env "$GLYPH_ENV" "$GLYPH" "$@" > "$out" 2> "$err" || RC=$?
+            else
+              "$GLYPH" "$@" > "$out" 2> "$err" || RC=$?
+            fi
+            echo "+ ${GLYPH_ENV:-} glyph $* -> exit $RC"
+          }
+
+          # The house sieve. stderr carries annotations before the JSON, and jq
+          # must never see them.
+          envelope() { sed -n '/^[{]/,$p' "$1"; }
+
+          err_field() { envelope "$1" | jq -r "$2 // \"\"" 2>/dev/null; }
+
+          assert_rc() {                     # assert_rc <arm> <want>  (reads $RC)
+            local arm="$1" want="$2"
+            if [ "$RC" -ne "$want" ]; then
+              echo "::error::$arm exited $RC, want exactly $want"
+              return 1
+            fi
+            echo "  ok  $arm exit=$want"
+          }
+
+          assert_empty_stdout() {           # assert_empty_stdout <arm> <out>
+            local arm="$1" out="$2" n
+            n=$(wc -c < "$out" | tr -d ' ')
+            if [ "$n" -ne 0 ]; then
+              echo "::error::$arm printed $n byte(s) on stdout — a refusal must print nothing a caller could parse as a verdict"
+              sed -n '1,20p' "$out"
+              return 1
+            fi
+            echo "  ok  $arm stdout is empty"
+          }
+
+          assert_envelope() {               # assert_envelope <arm> <err> <code>
+            local arm="$1" err="$2" want="$3" got
+            if ! envelope "$err" | jq -e . > /dev/null 2>&1; then
+              echo "::error::$arm printed no JSON error envelope — glyph did not refuse, something else did"
+              sed -n '1,40p' "$err"
+              return 1
+            fi
+            got=$(err_field "$err" '.error.code')
+            if [ "$got" != "$want" ]; then
+              echo "::error::$arm envelope code is '$got', want $want"
+              return 1
+            fi
+            echo "  ok  $arm envelope code=$want"
+          }
+
+          assert_says() {                   # assert_says <arm> <err> <substring>
+            local arm="$1" err="$2" want="$3" msg
+            msg=$(err_field "$err" '.error.message')
+            case "$msg" in
+              *"$want"*) echo "  ok  $arm .error.message carries '$want'" ;;
+              *) echo "::error::$arm was refused by something other than the mechanism it names — wanted '$want', .error.message is: $msg"; return 1 ;;
+            esac
+          }
+
+          assert_lacks() {                  # assert_lacks <arm> <err> <substring>
+            local arm="$1" err="$2" nope="$3" msg
+            msg=$(err_field "$err" '.error.message')
+            case "$msg" in
+              *"$nope"*) echo "::error::$arm's refusal carries '$nope', so it is not the refusal this arm names: $msg"; return 1 ;;
+              *) echo "  ok  $arm .error.message does not carry '$nope'" ;;
+            esac
+          }
+
+          assert_jq() {                     # assert_jq <arm> <err> <filter>
+            local arm="$1" err="$2" filter="$3"
+            if envelope "$err" | jq -e "$filter" > /dev/null 2>&1; then
+              echo "  ok  $arm envelope satisfies [$filter]"
+            else
+              echo "::error::$arm envelope fails [$filter]:"
+              envelope "$err"
+              return 1
+            fi
+          }
+
+          assert_line() {                   # assert_line <arm> <file> <exact line>
+            local arm="$1" f="$2" line="$3"
+            # -x, full-line anchored: the arm this file replaced matched
+            # 'add the demo feature' as a substring, which the templated line
+            # and the raw fallback line both satisfy.
+            if grep -qxF -- "$line" "$f"; then
+              echo "  ok  $arm carries the exact line: $line"
+            else
+              echo "::error::$arm: no line is exactly [$line]"
+              sed -n '1,60p' "$f"
+              return 1
+            fi
+          }
+
+          assert_absent() {                 # assert_absent <arm> <file> <substring>
+            # Spelled as an `if`, not `! grep -q`: a negated pipeline under
+            # `set -e` is a shape people simplify away by accident, and the
+            # failure has to be able to print the offending line.
+            local arm="$1" f="$2" pat="$3"
+            if grep -qF -- "$pat" "$f"; then
+              echo "::error::$arm: [$pat] appears where it must not:"
+              grep -nF -- "$pat" "$f"
+              return 1
+            fi
+            echo "  ok  $arm carries no [$pat]"
+          }
+
+          assert_no_line_matching() {       # assert_no_line_matching <arm> <file> <ere>
+            local arm="$1" f="$2" re="$3"
+            if grep -nE -- "$re" "$f"; then
+              echo "::error::$arm: the lines above match /$re/, which must match nothing here"
+              return 1
+            fi
+            echo "  ok  $arm has no line matching /$re/"
+          }
+
+          assert_matches() {                # assert_matches <arm> <file> <ere>
+            # NOTICES AND WARNINGS ONLY. Never reach for this to establish what
+            # glyph refused — that is what assert_says is for, and the reason
+            # the two are separate functions rather than one with a flag.
+            local arm="$1" f="$2" re="$3"
+            if grep -qE -- "$re" "$f"; then
+              echo "  ok  $arm stream matches /$re/"
+            else
+              echo "::error::$arm: nothing on the stream matches /$re/"
+              sed -n '1,40p' "$f"
+              return 1
+            fi
+          }
+
+          assert_eq() {                     # assert_eq <arm> <got> <want>
+            local arm="$1" got="$2" want="$3"
+            if [ "$got" != "$want" ]; then
+              echo "::error::$arm answered [$got], want [$want]"
+              return 1
+            fi
+            echo "  ok  $arm = $want"
+          }
+
+          # assert_settles <arm> <jq over the releases listing> <want>
+          #
+          # The releases listing is EVENTUALLY CONSISTENT after a POST. Measured
+          # against github.com on 2026-08-17: a draft glyph had just created,
+          # and whose url the same run printed, was absent from GET /releases at
+          # t+0s and present at t+3s; the PATCH path was visible immediately.
+          # So a bare read straight after a create asserts the lag rather than
+          # the mechanism — run 32032884689 red at `p1-count answered [0]` and
+          # again at `p3-action answered [none]`, because glyph's own next run
+          # read the same stale listing and found nothing to delete.
+          #
+          # Polling to a deadline, not sleeping a number: a sleep that is one
+          # second short is a flake, and a sleep that is generous hides the day
+          # the lag becomes real. This one says how long it waited when it
+          # fails, which is the finding.
+          assert_settles() {                # assert_settles <arm> <jq> <want> [seconds]
+            local arm="$1" filter="$2" want="$3" got="" deadline
+            deadline=$(( $(date +%s) + ${4:-30} ))
+            while : ; do
+              got="$(gh api "repos/$REPO/releases" --jq "$filter" 2>/dev/null || true)"
+              if [ "$got" = "$want" ]; then
+                echo "  ok  $arm = $want"
+                return 0
+              fi
+              if [ "$(date +%s)" -ge "$deadline" ]; then
+                echo "::error::$arm answered [$got], want [$want] — still wrong 30s after the write"
+                return 1
+              fi
+              sleep 2
+            done
+          }
+
+          canary() {                        # canary <name> <assertion…>
+            local name="$1"; shift
+            # Both streams silenced: the helpers report by printing `::error::`
+            # on STDOUT, so silencing stderr alone leaves every GREEN run
+            # carrying a red annotation for a rejection that was the point. An
+            # error annotation on a passing step is how a repository teaches
+            # people to stop reading annotations.
+            if "$@" > /dev/null 2>&1; then
+              echo "::error::canary $name: the assertion ACCEPTED the shape it exists to reject"
+              return 1
+            fi
+            echo "  canary ok  $name is still rejected"
+          }
+
+          assert_canaries() {
+            local t saved
+            t="$(mktemp -d)"
+            saved="$RC"
+
+            # THE measured false green, byte for byte. `grep` over the raw
+            # stream finds the ref-guard clause; `.error.message` does not, and
+            # only the second answer is true about what glyph refused.
+            {
+              printf '%s\n' '::notice::glyph: dry run from refs/heads/e2e-probe: nothing is written, so the ref this release would write from was not judged'
+              printf '%s\n' '{"error":{"code":4,"message":"computed version v1.0.0 is not greater than the latest published release v1.0.0 — refusing the draft"}}'
+            } > "$t/false-green.err"
+            grep -qF 'nothing is written, so the ref' "$t/false-green.err" || {
+              echo "::error::canary fixture lost its bait — the raw stream no longer carries the clause, so the canary proves nothing"
+              return 1
+            }
+            assert_says fg-accept "$t/false-green.err" 'is not greater than the latest published release' || return 1
+            canary "ref-clause-read-off-the-raw-stream" \
+              assert_says fg-reject "$t/false-green.err" 'nothing is written, so the ref' || return 1
+
+            # A glyph.toml that failed to load exits 3 with a message naming the
+            # file — the same integer a convention violation returns.
+            printf '%s\n' '{"error":{"code":3,"message":"/w/glyph.toml: patterns[4]: skip = true and semver_sigil = \"~\" contradict"}}' > "$t/broken-config.err"
+            assert_envelope bc-accept "$t/broken-config.err" 3 || return 1
+            canary "a-broken-config-passing-as-a-convention-violation" \
+              assert_lacks bc-reject "$t/broken-config.err" 'glyph.toml:' || return 1
+            canary "envelope-code-mismatch" \
+              assert_envelope bc-reject "$t/broken-config.err" 4 || return 1
+
+            printf '%s\n' '::error::glyph: something went wrong' > "$t/no-envelope.err"
+            canary "an-exit-with-no-json-envelope" \
+              assert_envelope ne-reject "$t/no-envelope.err" 3 || return 1
+
+            RC=3
+            assert_rc rc-accept 3 || { RC="$saved"; return 1; }
+            canary "the-wrong-exit-code" assert_rc rc-reject 4 || { RC="$saved"; return 1; }
+            RC="$saved"
+
+            printf 'a verdict\n' > "$t/nonempty.out"
+            : > "$t/empty.out"
+            assert_empty_stdout es-accept "$t/empty.out" || return 1
+            canary "a-refusal-that-still-printed-a-verdict" \
+              assert_empty_stdout es-reject "$t/nonempty.out" || return 1
+
+            {
+              printf '%s\n' '- add the demo feature `@tester` and then some more'
+              printf '%s\n' 'fixup! :bug:(demo)~ fix the demo crash'
+              printf '%s\n' '- :sparkles:(demo)^ raw gitmoji, no template'
+            } > "$t/lines.txt"
+            assert_line al-accept "$t/lines.txt" '- add the demo feature `@tester` and then some more' || return 1
+            canary "a-substring-match-passing-as-a-line" \
+              assert_line al-reject "$t/lines.txt" '- add the demo feature `@tester`' || return 1
+            assert_absent aa-accept "$t/lines.txt" 'squash!' || return 1
+            canary "a-string-that-is-present" \
+              assert_absent aa-reject "$t/lines.txt" 'fixup!' || return 1
+            assert_no_line_matching nl-accept "$t/lines.txt" '^## ' || return 1
+            canary "a-line-that-matches" \
+              assert_no_line_matching nl-reject "$t/lines.txt" '^- :' || return 1
+            assert_matches am-accept "$t/lines.txt" '^fixup! ' || return 1
+            canary "a-pattern-that-matches-nothing" \
+              assert_matches am-reject "$t/lines.txt" '^## Features$' || return 1
+
+            printf '%s\n' '{"error":{"code":3,"message":"x","details":[{"sha":"a"},{"sha":"b"}]}}' > "$t/details.err"
+            assert_jq aj-accept "$t/details.err" '.error.details|length==2' || return 1
+            canary "a-details-key-that-is-there" \
+              assert_jq aj-reject "$t/details.err" '.error|has("details")|not' || return 1
+
+            assert_eq ae-accept x x || return 1
+            canary "two-things-that-differ" assert_eq ae-reject x y || return 1
+
+            # assert_settles reaches the network, so it can only be canaried
+            # where a token exists — the grammar tier deliberately has none, and
+            # a canary that cannot make its call proves nothing either way. The
+            # accept arm asks for the count that is already true, so it returns
+            # on the first poll; the reject arm asks for a count no listing can
+            # hold, so it must spend its deadline and fail.
+            if [ -n "${GH_TOKEN:-}" ] && [ -n "${REPO:-}" ]; then
+              assert_settles as-accept '[.[]|select(.draft)]|length' \
+                "$(gh api "repos/$REPO/releases" --jq '[.[]|select(.draft)]|length')" 4 || return 1
+              canary "a-listing-that-never-settles" \
+                assert_settles as-reject '[.[]|select(.draft)]|length' -1 2 || return 1
+            fi
+
+            rm -rf "$t"
+            echo "canaries: every helper accepted its control and rejected its bait"
+          }
+          SH
+          chmod +x kit/glyph
+          ls -l kit
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-kit
+          path: kit
+          retention-days: 5
+          if-no-files-found: error
+
+  # ── tier 1 ────────────────────────────────────────────────────────────────
+  # Every byte-exact literal, in a fixture this job builds from nothing, with
+  # no credential anywhere.
+  #
+  # Goes red if: the 0.x clamp stops clamping, `%` stops promoting or starts
+  # depending on commit order, a `skip = true` pattern stops being total across
+  # lint/bump/notes, `exclude_authors` leaks into notes or stops holding lint
+  # and bump, an unmatched commit stops being a refusal, section order drifts,
+  # the note template stops being applied (or starts being applied to a commit
+  # no pattern matched), a revert renders as the change it undoes, or any of
+  # the three usage exits stops being 2.
+  #
+  # Every expected string below is a transcription of output measured against
+  # this exact fixture with the candidate binary — not a prediction.
+  #
+  # One dependency a reader would not guess: the fixture's config comes from
+  # `glyph init --gemoji` at the ref under test, so the note lines below assume
+  # the preset carries the optional span `$[ ($pr)] `. Under `--range` every
+  # commit's `$pr` is empty, so a preset that still writes a bare ` ($pr)`
+  # renders ` () ` and arms (c), (e), (j) and (k) go red. That is the fix
+  # landing, not a fixture bug.
+
+  # ── attribution ───────────────────────────────────────────────────────────
+  # DESIGN §4.1's rules, each on its own branch of a fixture this job builds
+  # from nothing, judged over `--range` (local git, no pull resolution) with no
+  # credential anywhere.
+  #
+  # Goes red if: a commit stops moving every line its files lie under, a
+  # shared-only `=` starts moving a line, a shared-only `^` stops being a
+  # refusal (or the refusal stops naming both escapes), a package-named scope
+  # stops carrying a shared change, a contradicting scope stops being refused,
+  # a rename across two lines stops moving both, a nested line's files leak
+  # into its parent, an untagged line stops baselining at v0.0.0, or the
+  # scalar verdict stops being empty in packages mode.
+  attribution:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions: {}
+    env:
+      GLYPH: ${{ github.workspace }}/kit/glyph
+      ASSERT: ${{ github.workspace }}/kit/assert.sh
+      WANT_VERSION: ${{ needs.build.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: e2e-kit
+          path: kit
+
+      - name: Take delivery of the kit, and prove it is the binary build judged
+        run: |
+          set -euo pipefail
+          chmod +x "$GLYPH"
+          # shellcheck source=/dev/null
+          . "$ASSERT"
+          assert_eq artifact-identity "$("$GLYPH" --version)" "$WANT_VERSION"
+          assert_canaries
+
+      - name: Assert this tier holds no credential
+        run: |
+          set -euo pipefail
+          for v in GITHUB_TOKEN GH_TOKEN GH_ENTERPRISE_TOKEN; do
+            if [ -n "$(printenv "$v" || true)" ]; then
+              echo "::error::$v is set on a tier that must judge nothing but its own fixture"
+              exit 1
+            fi
+          done
+          echo "no credential on this tier"
+
+      - name: Build the fixture — three lines, one nested, one left untagged
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"
+          F="$RUNNER_TEMP/fixture"
+          rm -rf "$F"; mkdir -p "$F"; cd "$F"
+          git init -q -b main
+          git config user.name tester
+          git config user.email tester@example.invalid
+          git config commit.gpgsign false
+          run_glyph "$RUNNER_TEMP/init.out" "$RUNNER_TEMP/init.err" init --gemoji
+          assert_rc init 0
+          printf '\n[[packages]]\npath = "travel"\n\n[[packages]]\npath = "travel/onsen"\n\n[[packages]]\npath = "camp"\n' >> glyph.toml
+          mkdir -p travel/onsen camp
+          echo a > travel/a.txt; echo o > travel/onsen/o.txt; echo c > camp/c.txt; echo r > README.md
+          git add -A && git commit -q -m ':tada:= start the fixture'
+          git tag base
+          # travel and camp are baselined; travel/onsen deliberately is NOT —
+          # arm (h) asks what an untagged line answers.
+          git tag travel/v0.0.0
+          git tag camp/v0.0.0
+          c() { git add -A; git commit -q -m "$1"; }
+          git checkout -q -b br-cross base
+          echo a2 > travel/a.txt;        c ':sparkles:(travel)^ add a route'
+          echo c2 > camp/c.txt;          c ':bug:(camp)~ fix the tent'
+          git checkout -q -b br-shared-none base
+          echo r2 > README.md;           c ':memo:= reword the readme'
+          git checkout -q -b br-shared-minor base
+          echo r3 > README.md;           c ':sparkles:^ shared minor with no carrier'
+          git checkout -q -b br-scope-carries base
+          echo r4 > README.md;           c ':sparkles:(camp)^ shared change the scope places on camp'
+          git checkout -q -b br-contradiction base
+          echo a3 > travel/a.txt;        c ':bug:(camp)~ a travel file under a camp scope'
+          git checkout -q -b br-rename base
+          git mv travel/a.txt camp/a.txt; c ':truck:(travel)~ move the route into camp'
+          git checkout -q -b br-nested base
+          echo o2 > travel/onsen/o.txt;  c ':sparkles:(onsen)^ add a bath'
+          git checkout -q main
+          git log --all --format='%h | %s'
+
+      # lines <json> → "path:level:next|…" in config order, the one shape every
+      # arm below compares against. next is "-" when absent.
+      - name: "(a) a commit moves every line its files lie under, with its one sigil — and the scalars are empty"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/fixture"
+          O="$RUNNER_TEMP/a"; run_glyph "$O.json" "$O.err" bump --range base..br-cross --json
+          assert_rc a-cross 0
+          assert_eq a-cross-lines "$(jq -r '[.packages[] | "\(.path):\(.level):\(.next // "-")"] | join("|")' "$O.json")" \
+            'travel:minor:v0.1.0|travel/onsen:none:-|camp:patch:v0.0.1'
+          # The scalars describe no one line, so they are empty — a consumer
+          # reading only them must fail safe (DESIGN §4.1, mutation row
+          # packages-scalar-verdict-describes-one-line).
+          assert_eq a-scalars "$(jq -r '"\(.current)|\(.level)|\(.next // "")"' "$O.json")" '||'
+          # stdout is the next TAG of every line that moves, config order.
+          O="$RUNNER_TEMP/a2"; run_glyph "$O.out" "$O.err" bump --range base..br-cross
+          assert_rc a-cross-stdout 0
+          assert_eq a-cross-tags "$(tr '\n' '|' < "$O.out")" 'travel/v0.1.0|camp/v0.0.1|'
+          O="$RUNNER_TEMP/a3"; run_glyph "$O.out" "$O.err" lint --range base..br-cross
+          assert_rc a-cross-lint 0
+
+      - name: "(b) notes answer per line, under a # <path> heading, and the shared sections are empty"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/fixture"
+          O="$RUNNER_TEMP/b"; run_glyph "$O.json" "$O.err" notes --range base..br-cross --json
+          assert_rc b-notes 0
+          assert_eq b-top-sections "$(jq -r '.sections|length' "$O.json")" 0
+          assert_eq b-per-line "$(jq -r '[.packages[] | "\(.path):" + ([.sections[].title]|join(","))] | join("|")' "$O.json")" \
+            'travel:Features|travel/onsen:|camp:Fixes'
+          O="$RUNNER_TEMP/b2"; run_glyph "$O.md" "$O.err" notes --range base..br-cross
+          assert_rc b-notes-stdout 0
+          assert_line b-heading-travel "$O.md" '# travel'
+          assert_line b-heading-camp   "$O.md" '# camp'
+          assert_absent b-no-onsen-heading "$O.md" '# travel/onsen'
+          assert_line b-travel-line "$O.md" '- :sparkles:(travel)^ add a route @tester'
+
+      - name: "(c) a shared-only = moves nothing: exit 1, every line none"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/fixture"
+          O="$RUNNER_TEMP/c"; run_glyph "$O.json" "$O.err" bump --range base..br-shared-none --json
+          assert_rc c-shared-none 1
+          assert_eq c-lines "$(jq -r '[.packages[] | "\(.path):\(.level)"] | join("|")' "$O.json")" \
+            'travel:none|travel/onsen:none|camp:none'
+          O="$RUNNER_TEMP/c2"; run_glyph "$O.out" "$O.err" lint --range base..br-shared-none
+          assert_rc c-lint 0
+
+      - name: "(d) a shared-only ^ has no carrier: refused at 3 on bump AND lint, naming both escapes"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/fixture"
+          O="$RUNNER_TEMP/d"; run_glyph "$O.json" "$O.err" bump --range base..br-shared-minor --json
+          assert_rc d-bump 3
+          assert_empty_stdout d-bump "$O.json"
+          assert_envelope d-bump "$O.err" 3
+          assert_says d-bump "$O.err" 'touches no declared package and its sigil ^ claims a version impact nothing can carry'
+          assert_says d-bump-escape-scope "$O.err" 'name the package in the scope (one of travel, onsen, camp)'
+          assert_says d-bump-escape-none  "$O.err" 'or write = so it moves no line'
+          O="$RUNNER_TEMP/d2"; run_glyph "$O.out" "$O.err" lint --range base..br-shared-minor
+          assert_rc d-lint 3
+          assert_envelope d-lint "$O.err" 3
+          assert_jq d-lint-detail "$O.err" '.error.details[0].detail | test("touches no declared package")'
+
+      - name: "(e) a package-named scope carries a shared change onto that line"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/fixture"
+          O="$RUNNER_TEMP/e"; run_glyph "$O.json" "$O.err" bump --range base..br-scope-carries --json
+          assert_rc e-scope 0
+          assert_eq e-lines "$(jq -r '[.packages[] | "\(.path):\(.level):\(.next // "-")"] | join("|")' "$O.json")" \
+            'travel:none:-|travel/onsen:none:-|camp:minor:v0.1.0'
+
+      - name: "(f) a scope that contradicts the tree is refused at 3, and says which files"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/fixture"
+          O="$RUNNER_TEMP/f"; run_glyph "$O.json" "$O.err" bump --range base..br-contradiction --json
+          assert_rc f-bump 3
+          assert_envelope f-bump "$O.err" 3
+          assert_says f-bump "$O.err" 'scope (camp) names a package this commit does not touch (its files lie under travel)'
+          O="$RUNNER_TEMP/f2"; run_glyph "$O.out" "$O.err" lint --range base..br-contradiction
+          assert_rc f-lint 3
+
+      - name: "(g) a rename across two lines moves both — that is what it did"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/fixture"
+          O="$RUNNER_TEMP/g"; run_glyph "$O.json" "$O.err" bump --range base..br-rename --json
+          assert_rc g-rename 0
+          assert_eq g-lines "$(jq -r '[.packages[] | "\(.path):\(.level):\(.next // "-")"] | join("|")' "$O.json")" \
+            'travel:patch:v0.0.1|travel/onsen:none:-|camp:patch:v0.0.1'
+
+      - name: "(h) a nested line takes its files out of its parent, and an untagged line baselines at v0.0.0"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/fixture"
+          O="$RUNNER_TEMP/h"; run_glyph "$O.json" "$O.err" bump --range base..br-nested --json
+          assert_rc h-nested 0
+          assert_eq h-lines "$(jq -r '[.packages[] | "\(.path):\(.level):\(.next // "-")"] | join("|")' "$O.json")" \
+            'travel:none:-|travel/onsen:minor:v0.1.0|camp:none:-'
+          # travel/onsen carries no tag in this fixture: its current is the
+          # baseline v0.0.0, and its next steps from there.
+          assert_eq h-untagged-current "$(jq -r '.packages[] | select(.path=="travel/onsen") | .current' "$O.json")" v0.0.0
+          assert_eq h-no-onsen-tag "$(git tag -l 'travel/onsen/*' | wc -l | tr -d ' ')" 0
+
+  # ── walk ──────────────────────────────────────────────────────────────────
+  # The same rules over the API, at this repository's FROZEN coordinate: the
+  # merge commit of #11, where every line's draft was measured standing
+  # (2026-09-10). Pulls #10 and #11 were squash-merged, so the commits the
+  # verdict names exist on no branch — the walk can only have read them from
+  # the API, which is the whole justification for a live tier.
+  #
+  # Goes red if: the walk stops attributing a squashed pull's inner commits
+  # per line, a tag that names a line stops converging that line alone, a bare
+  # --since-tag stops walking every line from its own highest tag, preview
+  # stops rendering one verdict per touched line (or starts mentioning a line
+  # the pull did not touch), notes stop answering under `# <path>` headings,
+  # or the frozen coordinate is rewritten.
+  walk:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read
+    env:
+      GLYPH: ${{ github.workspace }}/kit/glyph
+      ASSERT: ${{ github.workspace }}/kit/assert.sh
+      WANT_VERSION: ${{ needs.build.outputs.version }}
+      REPO: ${{ github.repository }}
+      GH_TOKEN: ${{ github.token }}
+      # The merge commit of #11 — the coordinate every literal below was
+      # measured at. Move it only together with every literal.
+      FROZEN: 380db9d
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          path: repo
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: e2e-kit
+          path: kit
+
+      - name: Take delivery of the kit
+        run: |
+          set -euo pipefail
+          chmod +x "$GLYPH"
+          # shellcheck source=/dev/null
+          . "$ASSERT"
+          assert_eq artifact-identity "$("$GLYPH" --version)" "$WANT_VERSION"
+          assert_canaries
+
+      - name: The frozen coordinate still exists where this tier says it does
+        working-directory: repo
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"
+          git rev-parse "$FROZEN^{commit}"
+          if ! git merge-base --is-ancestor "$FROZEN" HEAD; then
+            echo "::error::the frozen coordinate no longer exists: $FROZEN is not an ancestor of the ref under test"
+            exit 1
+          fi
+          for t in haiku/v0.0.0 curry/v0.0.0 travel/v0.0.0 travel/onsen/v0.0.0 camp/v0.0.0; do
+            git rev-parse "$t^{commit}" > /dev/null
+          done
+          git worktree add -q --detach "$RUNNER_TEMP/w" "$FROZEN"
+          assert_eq worktree-head "$(git -C "$RUNNER_TEMP/w" rev-parse --short HEAD)" "$FROZEN"
+
+      - name: "(a) a bare --since-tag walks every line from its own highest tag — and names a commit no branch holds"
+        if: ${{ !cancelled() }}
+        working-directory: repo
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/w"
+          O="$RUNNER_TEMP/wa"; run_glyph "$O.json" "$O.err" bump --since-tag=auto --json --repo "$REPO"
+          assert_rc wa-bump 0
+          assert_eq wa-lines "$(jq -r '[.packages[] | "\(.path):\(.current):\(.level):\(.next // "-")"] | join("|")' "$O.json")" \
+            'haiku:v0.1.0:patch:v0.1.1|curry:v0.0.1:none:-|travel:v0.0.0:minor:v0.1.0|travel/onsen:v0.0.0:minor:v0.1.0|camp:v0.0.0:patch:v0.0.1'
+          assert_eq wa-scalars "$(jq -r '"\(.current)|\(.level)|\(.next // "")"' "$O.json")" '||'
+          # travel's deciding commit is the INNER commit of #10's squash: it
+          # exists on no branch, so the walk read it from the API.
+          reason="$(jq -r '.packages[] | select(.path=="travel") | .reason' "$O.json")"
+          assert_eq wa-travel-reason "$(printf '%s' "$reason" | cut -d' ' -f1-2)" '4922f1e ^'
+          assert_eq wa-not-in-git "$(git log --format=%h "travel/v0.0.0..$FROZEN" | grep -c '^4922f1e' || true)" 0
+          O="$RUNNER_TEMP/wa2"; run_glyph "$O.out" "$O.err" bump --since-tag=auto --repo "$REPO"
+          assert_rc wa-stdout 0
+          assert_eq wa-tags "$(tr '\n' '|' < "$O.out")" 'haiku/v0.1.1|travel/v0.1.0|travel/onsen/v0.1.0|camp/v0.0.1|'
+
+      - name: "(b) a tag that names a line converges that line ALONE"
+        if: ${{ !cancelled() }}
+        working-directory: repo
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/w"
+          O="$RUNNER_TEMP/wb"; run_glyph "$O.json" "$O.err" bump --since-tag=travel/v0.0.0 --json --repo "$REPO"
+          assert_rc wb-travel 0
+          assert_eq wb-travel-lines "$(jq -r '[.packages[] | "\(.path):\(.level):\(.next // "-")"] | join("|")' "$O.json")" 'travel:minor:v0.1.0'
+          O="$RUNNER_TEMP/wb2"; run_glyph "$O.json" "$O.err" bump --since-tag=travel/onsen/v0.0.0 --json --repo "$REPO"
+          assert_rc wb-onsen 0
+          assert_eq wb-onsen-lines "$(jq -r '[.packages[] | "\(.path):\(.level):\(.next // "-")"] | join("|")' "$O.json")" 'travel/onsen:minor:v0.1.0'
+          # The dry run of a release selected by one tag plans one line. Its
+          # `.action` is deliberately unasserted here: this job holds a read
+          # token, and GitHub shows drafts to push access only, so
+          # create-vs-update would be a statement about the token. Tier
+          # `drafts` holds write and asserts it there.
+          O="$RUNNER_TEMP/wb3"; run_glyph "$O.json" "$O.err" release --dry-run --json --since-tag=camp/v0.0.0 --repo "$REPO"
+          assert_rc wb-camp-release 0
+          assert_eq wb-camp-plan "$(jq -r '[.packages[] | "\(.path):\(.level):\(.tag // "-")"] | join("|")' "$O.json")" 'camp:patch:camp/v0.0.1'
+
+      - name: "(c) preview renders one verdict per touched line, and never a line the pull did not touch"
+        if: ${{ !cancelled() }}
+        working-directory: repo
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/w"
+          # #10: a ^ under travel/ and a ~ under camp/, squashed. travel/onsen
+          # is nested in travel and must NOT appear.
+          O="$RUNNER_TEMP/wc"; run_glyph "$O.json" "$O.err" preview --pr 10 --json --repo "$REPO"
+          assert_rc wc-pr10 0
+          assert_eq wc-pr10-lines "$(jq -r '[.packages[] | "\(.path):\(.current):\(.level):\(.next // "-")"] | join("|")' "$O.json")" \
+            'travel:v0.0.0:minor:v0.1.0|camp:v0.0.0:patch:v0.0.1'
+          assert_eq wc-pr10-scalars "$(jq -r '"\(.level)|\(.next // "")"' "$O.json")" '|'
+          # #11: only travel/onsen/ — the parent line is not mentioned.
+          O="$RUNNER_TEMP/wc2"; run_glyph "$O.json" "$O.err" preview --pr 11 --json --repo "$REPO"
+          assert_rc wc-pr11 0
+          assert_eq wc-pr11-lines "$(jq -r '[.packages[] | "\(.path):\(.level):\(.next // "-")"] | join("|")' "$O.json")" 'travel/onsen:minor:v0.1.0'
+          O="$RUNNER_TEMP/wc3"; run_glyph "$O.md" "$O.err" preview --pr 10 --repo "$REPO"
+          assert_rc wc-pr10-md 0
+          assert_matches wc-pr10-headline-travel "$O.md" '^\*\*travel\*\* — .*travel/v0\.0\.0 → travel/v0\.1\.0'
+          assert_matches wc-pr10-headline-camp   "$O.md" '^\*\*camp\*\* — .*camp/v0\.0\.0 → camp/v0\.0\.1'
+          assert_no_line_matching wc-pr10-no-onsen "$O.md" '^\*\*travel/onsen\*\*'
+
+      - name: "(d) notes answer under a # <path> heading per line, and a line that moved nothing has none"
+        if: ${{ !cancelled() }}
+        working-directory: repo
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/w"
+          O="$RUNNER_TEMP/wd"; run_glyph "$O.md" "$O.err" notes --since-tag=auto --repo "$REPO"
+          assert_rc wd-notes 0
+          assert_line wd-haiku  "$O.md" '# haiku'
+          assert_line wd-travel "$O.md" '# travel'
+          assert_line wd-onsen  "$O.md" '# travel/onsen'
+          assert_line wd-camp   "$O.md" '# camp'
+          assert_absent wd-no-curry "$O.md" '# curry'
+          assert_line wd-travel-line "$O.md" '- :sparkles:(travel)^ add Kobe as a fourth stop (#10) @akira-toriyama'
+          assert_line wd-camp-line   "$O.md" '- :bug:(camp)~ name the stove by its fuel (#10) @akira-toriyama'
+
+      - name: Over live main, assert only what cannot rot
+        if: ${{ !cancelled() }}
+        working-directory: repo
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"
+          O="$RUNNER_TEMP/live"
+          run_glyph "$O.rel.json" "$O.rel.err" release --dry-run --json --since-tag=auto --repo "$REPO"
+          if [ "$RC" -ne 0 ] && [ "$RC" -ne 1 ]; then assert_rc live-release 0; fi
+          run_glyph "$O.bump.json" "$O.bump.err" bump --since-tag=auto --json --repo "$REPO"
+          if [ "$RC" -ne 0 ] && [ "$RC" -ne 1 ]; then assert_rc live-bump 0; fi
+          # A RELATIONSHIP, never a literal: per line, the tag release would
+          # draft is the tag bump names.
+          assert_eq live-agree \
+            "$(jq -r '[.packages[] | "\(.path)=\(.tag // "-")"] | join("|")' "$O.rel.json")" \
+            "$(jq -r '[.packages[] | "\(.path)=" + (if .next then (.path + "/" + .next) else "-" end)] | join("|")' "$O.bump.json")"
+
+      - name: Leave the checkout as it was found
+        if: ${{ !cancelled() }}
+        working-directory: repo
+        run: |
+          set -euo pipefail
+          git worktree remove --force "$RUNNER_TEMP/w" || true
+          test -z "$(git status --porcelain)"
+
+  # ── drafts ────────────────────────────────────────────────────────────────
+  # One real write, in the group release.yml shares. Goes red if: a bare
+  # vX.Y.Z draft stops being recognised as the single line's residue (this
+  # repository declares no root package), a second draft on a line stops being
+  # converged away, a line's standing draft stops being updated IN PLACE (a
+  # new id would mean a delete-and-create the ratified "never a second draft"
+  # forbids), or the run leaves anything behind that release.yml's read-back
+  # would not accept.
+  #
+  # Every planted draft carries a tag no line will ever cut (v0.0.9 is bare;
+  # camp/v9.9.9 is absurd), so a run that dies mid-way leaves nothing a human
+  # could publish by mistake and nothing the next release.yml run would not
+  # sweep.
+  drafts:
+    needs: [build, walk]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: read
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    env:
+      GLYPH: ${{ github.workspace }}/kit/glyph
+      ASSERT: ${{ github.workspace }}/kit/assert.sh
+      WANT_VERSION: ${{ needs.build.outputs.version }}
+      REPO: ${{ github.repository }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          path: repo
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: e2e-kit
+          path: kit
+
+      - name: Take delivery of the kit, and check the coordinates this job writes from
+        id: coordinates
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          chmod +x "$GLYPH"
+          # shellcheck source=/dev/null
+          . "$ASSERT"
+          assert_eq artifact-identity "$("$GLYPH" --version)" "$WANT_VERSION"
+          assert_canaries
+          want="refs/heads/${DEFAULT_BRANCH}"
+          if [ "$GITHUB_REF" != "$want" ]; then
+            echo "::error::this job writes, so it must be dispatched from $want — this run is on $GITHUB_REF"
+            exit 1
+          fi
+
+      - name: Phase 0 — record every line's standing draft, by id
+        id: p0
+        run: |
+          set -euo pipefail
+          gh api "repos/$REPO/releases?per_page=100" \
+            --jq '[.[] | select(.draft) | {tag_name, id}] | sort_by(.tag_name) | map("\(.tag_name)=\(.id)") | join(" ")' > "$RUNNER_TEMP/p0.txt"
+          echo "standing: $(cat "$RUNNER_TEMP/p0.txt")"
+          if grep -qE '(^| )v[0-9]+\.[0-9]+\.[0-9]+=' "$RUNNER_TEMP/p0.txt"; then
+            echo "::error::a bare vX.Y.Z draft already stands — the residue arm below could not tell its own plant from it; run release.yml first"
+            exit 1
+          fi
+
+      - name: Phase 1 — plant the single line's residue and a stray on one line
+        if: ${{ !cancelled() && steps.coordinates.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"
+          bare=$(gh api -X POST "repos/$REPO/releases" -f tag_name=v0.0.9 -f name=v0.0.9 -F draft=true -f body='e2e residue plant' --jq .id)
+          stray=$(gh api -X POST "repos/$REPO/releases" -f tag_name=camp/v9.9.9 -f name=camp/v9.9.9 -F draft=true -f body='e2e stray plant' --jq .id)
+          echo "planted bare=$bare stray=$stray"
+          echo "$bare"  > "$RUNNER_TEMP/bare.id"
+          echo "$stray" > "$RUNNER_TEMP/stray.id"
+          assert_settles p1-planted '[.[]|select(.draft)|select(.tag_name=="v0.0.9" or .tag_name=="camp/v9.9.9")]|length' 2
+
+      - name: "Phase 2 — one real release converges every line: residue and stray gone, every standing draft kept by id"
+        if: ${{ !cancelled() && steps.p0.outcome == 'success' }}
+        working-directory: repo
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"
+          O="$RUNNER_TEMP/p2"
+          run_glyph "$O.json" "$O.err" release --json --since-tag=auto --repo "$REPO"
+          if [ "$RC" -ne 0 ] && [ "$RC" -ne 1 ]; then assert_rc p2-release 0; fi
+          bare=$(cat "$RUNNER_TEMP/bare.id"); stray=$(cat "$RUNNER_TEMP/stray.id")
+          # Notices are the only channel for these two facts, so the raw-stream
+          # matcher is the right tool here (assert.sh says when it is not).
+          assert_matches p2-residue-notice "$O.err" "the bare draft v0\.0\.9 \(release id $bare\) is the single line's residue"
+          assert_matches p2-residue-gone   "$O.err" "discarded the stale draft v0\.0\.9 \(release id $bare\)"
+          assert_matches p2-stray-gone     "$O.err" "discarded the stale draft camp/v9\.9\.9 \(release id $stray\)"
+          assert_settles p2-plants-gone '[.[]|select(.draft)|select(.tag_name=="v0.0.9" or .tag_name=="camp/v9.9.9")]|length' 0
+          # Every line's draft is the SAME release it was — updated in place.
+          gh api "repos/$REPO/releases?per_page=100" \
+            --jq '[.[] | select(.draft) | {tag_name, id}] | sort_by(.tag_name) | map("\(.tag_name)=\(.id)") | join(" ")' > "$RUNNER_TEMP/p2.txt"
+          assert_eq p2-same-drafts "$(cat "$RUNNER_TEMP/p2.txt")" "$(cat "$RUNNER_TEMP/p0.txt")"
+          # …and the verdict said so: no line was created or deleted, only
+          # updated or none.
+          assert_eq p2-actions "$(jq -r '[.packages[].action] | unique | join(",")' "$O.json")" "$(jq -r '[.packages[].action] | unique | map(select(. == "update" or . == "none")) | join(",")' "$O.json")"
+
+      - name: "Phase 3 — at most one draft per line, and no bare draft, as release.yml's read-back reads it"
+        if: ${{ !cancelled() && steps.p0.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPO/releases?per_page=100" --jq '.[] | select(.draft) | .tag_name' > drafts.txt
+          for line in haiku curry travel travel/onsen camp; do
+            n="$(grep -cE "^$line/v[0-9]+\.[0-9]+\.[0-9]+$" drafts.txt || true)"
+            if [ "$n" -gt 1 ]; then echo "::error::$line has $n drafts"; exit 1; fi
+          done
+          if grep -qE '^v[0-9]' drafts.txt; then echo "::error::a bare vX.Y.Z draft stands"; exit 1; fi
+          echo "steady state:"; cat drafts.txt
+
+  # ── distribution ──────────────────────────────────────────────────────────
+  # Goes red if: this repository's glyph pin sites do not all resolve to ONE
+  # version. glyph-test's e2e-v2 carries the incident history; the arm is the
+  # same one, because the drift it catches lives in the plumbing every caller
+  # shares.
+  distribution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Every glyph pin site in this repository resolves to one version
+        run: |
+          set -euo pipefail
+          re='akira-toriyama/glyph[A-Za-z0-9._/-]*@v[0-9A-Za-z._-]*|version: *v[0-9A-Za-z._-]*'
+          find .github -type f -print0 | while IFS= read -r -d '' f; do
+            sed 's/#.*//' "$f" | grep -nE "$re" | sed "s|^|$f:|" || true
+          done
+          refs=$(find .github -type f -print0 | xargs -0 -n1 sed 's/#.*//' \
+            | grep -oE "$re" | sed 's/.*@//; s/^version: *//' | sort || true)
+          total=$(printf '%s\n' "$refs" | grep -c . || true)
+          distinct=$(printf '%s\n' "$refs" | sort -u | grep -c . || true)
+          echo "pin sites: $total   distinct versions: $distinct"
+          # The positive control first: four callers live here (commit-lint,
+          # version-preview, release, artifact-probe), so fewer than four
+          # matches means the pattern stopped matching what it is for.
+          if [ "$total" -lt 4 ]; then
+            echo "::error::found $total glyph pin reference(s) under .github/, want at least 4 — the pattern has stopped matching what it is for"
+            exit 1
+          fi
+          if [ "$distinct" -ne 1 ]; then
+            echo "::error::$total glyph pin site(s) resolve to $distinct distinct versions; a rollout that moves some of them is a rollout that moved none"
+            printf '%s\n' "$refs" | sort | uniq -c
+            exit 1
+          fi
+          echo "all $total pin sites resolve to $(printf '%s\n' "$refs" | head -1)"
