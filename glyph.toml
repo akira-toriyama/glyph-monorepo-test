@@ -95,10 +95,21 @@ title = "Fixes"
 author = 'dependabot[bot]'
 title = "Dependencies"
 
-# The harness's two version lines (glyph DESIGN §4.1): each module's tags are
-# <path>/vX.Y.Z, and a commit moves the line its own diff touches.
+# The harness's version lines (glyph DESIGN §4.1): each module's tags are
+# <path>/vX.Y.Z, and a commit moves the line its own diff touches. travel/onsen
+# is nested inside travel/ on purpose: the longest declared prefix wins, so a
+# file under travel/onsen/ moves onsen and not travel.
 [[packages]]
 path = "haiku"
 
 [[packages]]
 path = "curry"
+
+[[packages]]
+path = "travel"
+
+[[packages]]
+path = "travel/onsen"
+
+[[packages]]
+path = "camp"
