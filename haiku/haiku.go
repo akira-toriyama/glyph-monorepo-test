@@ -4,7 +4,7 @@ package haiku
 
 // Autumn is the seed poem; a new season lands as a minor bump of this module.
 func Autumn() string {
-	return "an old silent pond\na frog jumps into the pond—\nsplash! silence again"
+	return "an old silent pond\na frog jumps into the pond —\nsplash! silence again"
 }
 
 // Winter is the second season; a new season lands as a minor bump of this module.
