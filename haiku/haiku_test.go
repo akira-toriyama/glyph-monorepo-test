@@ -75,6 +75,14 @@ func TestEveryPoemIsThreeLines(t *testing.T) {
 	}
 }
 
+func TestEveryCutIsSpaced(t *testing.T) {
+	for _, p := range Poems() {
+		if strings.Count(p.Text, "—") != strings.Count(p.Text, " —") {
+			t.Errorf("%s: an em dash with nothing before it: %q", p.Author, p.Text)
+		}
+	}
+}
+
 func TestEveryPoemNamesItsPoetAndKigo(t *testing.T) {
 	filed := map[string]string{}
 	for _, p := range Poems() {

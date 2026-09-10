@@ -39,7 +39,7 @@ var saijiki = map[Season][]Poem{
 	},
 	Winter: {
 		{
-			Text:   "first winter rain—\neven the monkey seems to want\na little straw coat",
+			Text:   "first winter rain —\neven the monkey seems to want\na little straw coat",
 			Author: "Matsuo Bashō",
 			Kigo:   "first winter rain",
 		},
