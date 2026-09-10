@@ -28,6 +28,17 @@
 #                 count stays ≤ 1 — then the repository is left as release.yml
 #                 expects it
 #   distribution  every glyph pin site here resolves to one version
+#
+# Measured 2026-09-10/11, dispatching this file at two refs:
+#   glyph-ref: v3.3.0  -> every tier GREEN (run 34495426628).
+#   glyph-ref: v3.2.0  -> the previous release, the sharp control: `build` and
+#                         `distribution` green, EVERY arm of `attribution` and
+#                         `walk` red, `drafts` skipped (run 34495791159). A
+#                         v3.2.0 binary refuses a glyph.toml that declares
+#                         [[packages]] (§2's strict decoder), so nothing
+#                         downstream of the fixture ever answers — coarse, and
+#                         still the proof that these tiers reject the release
+#                         the fleet ran the day before.
 name: e2e
 
 run-name: e2e — glyph-ref=${{ inputs.glyph-ref }}
