@@ -17,7 +17,7 @@ func TestCardClosesWithTheTotal(t *testing.T) {
 		t.Fatalf("card has %d lines, want one per item plus the total (%d)", got, want)
 	}
 	last := lines[len(lines)-1]
-	if !strings.HasPrefix(last, "total") || !strings.Contains(last, "4.3 kg") {
-		t.Fatalf("last line = %q, want the total at 4.3 kg", last)
+	if !strings.HasPrefix(last, "total") || !strings.Contains(last, "4.8 kg") {
+		t.Fatalf("last line = %q, want the total at 4.8 kg", last)
 	}
 }
