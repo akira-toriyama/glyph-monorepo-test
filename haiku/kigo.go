@@ -4,7 +4,7 @@ package haiku
 // whole: matching a substring meant "" answered with whatever stood first, and
 // half a word ("rain") found the winter poem by accident.
 func ByKigo(word string) (Poem, bool) {
-	for _, p := range year {
+	for _, p := range Poems() {
 		if p.Kigo == word {
 			return p, true
 		}

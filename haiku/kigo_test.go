@@ -7,7 +7,7 @@ func TestByKigoFindsTheWinterRain(t *testing.T) {
 	if !ok {
 		t.Fatal("the first winter rain is filed under nothing")
 	}
-	if got != Winter() {
+	if got != Of(Winter)[0] {
 		t.Fatalf("found %q", got.Text)
 	}
 }
@@ -35,7 +35,7 @@ func TestByKigoFindsTheSummerGrasses(t *testing.T) {
 	if !ok {
 		t.Fatal("the summer grasses are filed under nothing")
 	}
-	if got != Summer() {
+	if got != Of(Summer)[0] {
 		t.Fatalf("found %q", got.Text)
 	}
 }
