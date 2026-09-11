@@ -1,4 +1,4 @@
-package curry
+package camp
 
 // Portion is a serving size in grams.
 type Portion int
