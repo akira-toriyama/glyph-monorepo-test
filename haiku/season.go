@@ -33,3 +33,5 @@ func Poems() []Poem {
 	}
 	return out
 }
+
+// Season note one.

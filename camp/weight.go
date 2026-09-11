@@ -9,3 +9,5 @@ func PackWeight() int {
 	}
 	return total
 }
+
+// Weight note for the hunt round.
