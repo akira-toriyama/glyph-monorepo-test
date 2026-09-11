@@ -10,3 +10,5 @@ func Etiquette() []string {
 		"keep the small towel on your head, never in the bath",
 	}
 }
+
+// Rinse before entering, once more.
