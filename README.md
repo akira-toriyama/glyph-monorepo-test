@@ -72,5 +72,8 @@ Measured by hand rather than in e2e, because each consumes a tag or a version:
 - a hand region written **above** the sentinel survives a rewrite: written into all five standing drafts, then read back unchanged after `e2e.yml`'s drafts tier had rewritten every one of them (2026-09-11, run 34501469251).
 - the published floor is **per line**: at the frozen coordinate `release --dry-run --since-tag=camp/v0.0.0` refuses at exit 4 naming camp's own latest published release, never another line's. That is now the walk tier's arm (b2).
 - `e2e.yml`'s drafts tier runs `release` with no `--footer-file`, so a dispatch leaves every draft without the `install-notes` block until the next push to `main` writes it back (2026-09-11). Publish after a push, never straight after a dispatch.
-
-A hunt round note.
+- a rename **across two lines** moves both, over the API's own file listing: #22 moved `portion.go` from `curry/` to `camp/` in one commit, and the merge preview put that commit in both tables (2026-09-11). `git diff-tree --no-renames` and `previous_filename` agree.
+- path boundaries are whole path segments, not string prefixes (2026-09-11, `bump --range` on a local clone): a root file named `camp.md` and a root directory `travelling/` are shared-only and refused, `travel/onsenx/` belongs to `travel`, and `travel/onsen/` belongs to `onsen`.
+- the four attribution answers, measured one at a time on a local clone (2026-09-11): an empty commit carrying `^` is refused, a shared-only `^` is refused, a shared-only `^` whose scope names `haiku` moves haiku alone, and a `(haiku)` scope on a commit touching only `curry/` is refused as a contradiction.
+- a pull that touches **no** declared line renders its own headline rather than an empty table: "Merging this PR moves nothing — its 1 commit(s) touch no declared package" (2026-09-11, #23, closed after the reading).
+- the reusable still refuses an artifact input here: `artifact-probe.yml` went red at "Refuse an artifact input on a packages repository" against `release.yml@v3.3.0` (2026-09-11, run 34561643491).
