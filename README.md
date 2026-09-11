@@ -72,3 +72,5 @@ Measured by hand rather than in e2e, because each consumes a tag or a version:
 - a hand region written **above** the sentinel survives a rewrite: written into all five standing drafts, then read back unchanged after `e2e.yml`'s drafts tier had rewritten every one of them (2026-09-11, run 34501469251).
 - the published floor is **per line**: at the frozen coordinate `release --dry-run --since-tag=camp/v0.0.0` refuses at exit 4 naming camp's own latest published release, never another line's. That is now the walk tier's arm (b2).
 - `e2e.yml`'s drafts tier runs `release` with no `--footer-file`, so a dispatch leaves every draft without the `install-notes` block until the next push to `main` writes it back (2026-09-11). Publish after a push, never straight after a dispatch.
+
+A note that touches no version line.
