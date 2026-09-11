@@ -13,3 +13,5 @@ func ByKigo(word string) (Poem, bool) {
 }
 
 // Kigo for the hunt round.
+
+// Kigo note two.
