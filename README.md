@@ -77,3 +77,13 @@ Measured by hand rather than in e2e, because each consumes a tag or a version:
 - the four attribution answers, measured one at a time on a local clone (2026-09-11): an empty commit carrying `^` is refused, a shared-only `^` is refused, a shared-only `^` whose scope names `haiku` moves haiku alone, and a `(haiku)` scope on a commit touching only `curry/` is refused as a contradiction.
 - a pull that touches **no** declared line renders its own headline rather than an empty table: "Merging this PR moves nothing — its 1 commit(s) touch no declared package" (2026-09-11, #23, closed after the reading).
 - the reusable still refuses an artifact input here: `artifact-probe.yml` went red at "Refuse an artifact input on a packages repository" against `release.yml@v3.3.0` (2026-09-11, run 34561643491).
+- a **sigil-less bot subject breaks this harness**, and the fix is upstream (2026-09-13). `fleet-sync`
+  wrote `:wrench:(fleet) sync 8 standard files in one push` (948d1a6) and `release` refused the whole
+  range at exit 3 (run 34745527599) — this repository has no v1-acceptance window, so it is one of the
+  two in the fleet that can report the defect at all. Producers fixed in `akira-toriyama/.github#226`;
+  the already-merged commit was amended to carry `=` (948d1a6 -> 614d3ad, tree and parent unchanged,
+  author preserved), after which `release --dry-run` exits 0 and all five lines resolve.
+- `commit-lint`'s push arm **refuses rather than guesses across a force push**: after that amend it
+  answered `event.before is not an ancestor of event.after (a force push, or a base this clone cannot
+  see)` at exit 1 (run 34749951009). That is the designed answer, not a defect — the next ordinary push
+  to `main` judges normally, which is what the commit adding these two lines demonstrates.
