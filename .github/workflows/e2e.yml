@@ -514,7 +514,11 @@ jobs:
           rm -rf "$F"; mkdir -p "$F"; cd "$F"
           git init -q -b main
           git config user.name tester
-          git config user.email tester@example.invalid
+          # GitHub's noreply address, not a personal one: since glyph#226 a
+          # credit goes live only for a LOGIN, and this address is the one
+          # place git itself carries one — the shape every fleet commit has.
+          # (i) below holds the other half, from a personal address.
+          git config user.email 1+tester@users.noreply.github.com
           git config commit.gpgsign false
           run_glyph "$RUNNER_TEMP/init.out" "$RUNNER_TEMP/init.err" init --gemoji
           assert_rc init 0
@@ -543,6 +547,11 @@ jobs:
           git mv travel/a.txt camp/a.txt; c ':truck:(travel)~ move the route into camp'
           git checkout -q -b br-nested base
           echo o2 > travel/onsen/o.txt;  c ':sparkles:(onsen)^ add a bath'
+          # (i) one commit from a PERSONAL address: credited by name, paged by
+          #     nobody (glyph#226).
+          git checkout -q -b br-stranger base
+          echo a5 > travel/a.txt; git add -A
+          git commit -q -m ':bug:(travel)~ fix a route for a stranger' --author='Saleh <saleh@example.invalid>'
           git checkout -q main
           git log --all --format='%h | %s'
 
@@ -667,6 +676,24 @@ jobs:
           # baseline v0.0.0, and its next steps from there.
           assert_eq h-untagged-current "$(jq -r '.packages[] | select(.path=="travel/onsen") | .current' "$O.json")" v0.0.0
           assert_eq h-no-onsen-tag "$(git tag -l 'travel/onsen/*' | wc -l | tr -d ' ')" 0
+
+      - name: "(i) a credit goes live only for a login — a personal address is credited by name and pages no one"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/fixture"
+          O="$RUNNER_TEMP/i"; run_glyph "$O.md" "$O.err" notes --range base..br-stranger
+          assert_rc i-notes 0
+          # Both halves, or it proves nothing: (b) holds `@tester` live from
+          # the fixture's noreply address; this holds the name from a personal
+          # address as plain prose, at-sign dropped — neither live nor fenced.
+          # `Saleh` is github.com/larrasket's display name, so a live `@Saleh`
+          # pages a stranger and a fenced one still shows the stranger's
+          # handle (glyph#226).
+          assert_line i-heading-travel "$O.md" '# travel'
+          assert_line i-prose "$O.md" '- :bug:(travel)~ fix a route for a stranger Saleh'
+          assert_absent i-not-paged "$O.md" '@Saleh'
 
   # ── walk ──────────────────────────────────────────────────────────────────
   # The same rules over the API, at this repository's FROZEN coordinate: the
