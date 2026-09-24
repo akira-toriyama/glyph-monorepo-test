@@ -11,3 +11,5 @@ type Poem struct {
 	// as one phrase: it is the index key, not a description of the poem.
 	Kigo string
 }
+
+// live-fire probe for the v3.3.1 rollout (runbook step 6); this PR is closed unmerged
