@@ -45,7 +45,7 @@ jobs:
 
         | line | module path |
         |---|---|
-        | `haiku/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/haiku` |
+        | `haiku/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/haiku/v3` — from `haiku/v3.0.0`; the v2.x tags were cut without the suffix and `go get` refuses them |
         | `curry/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/curry` |
         | `travel/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/travel` |
         | `travel/onsen/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/travel/onsen` |
