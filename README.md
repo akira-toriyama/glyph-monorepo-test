@@ -10,18 +10,18 @@ of the pull's commits touched which module.
 
 | module | tag line | what its history shows |
 |---|---|---|
-| `haiku/` | `haiku/vX.Y.Z` | `%` is the only door to 1.0.0, and `!` takes the major once a line is 1.x — two published majors (`haiku/v1.0.0`, `haiku/v2.0.0`), a third standing as the `haiku/v3.0.0` draft |
+| `haiku/` | `haiku/vX.Y.Z` | `%` is the only door to 1.0.0, and `!` takes the major once a line is 1.x — three published majors (`haiku/v1.0.0`, `haiku/v2.0.0`, `haiku/v3.0.0`) — the v2 line cut before its path moved, and unfetchable for it |
 | `curry/` | `curry/vX.Y.Z` | a line that grew on `^` and `~` alone before it called 1.0 |
 | `travel/` | `travel/vX.Y.Z` | `!` on a 0.x line steps the **minor**: breaking things early cannot claim a stable major |
-| `travel/onsen/` | `travel/onsen/vX.Y.Z` | **nested** in `travel/`: a change here moves onsen alone — the longest declared prefix wins. Both lines promoted to 1.0.0 in the same merge, each on its own commits; a `!` since stands as the `travel/onsen/v2.0.0` draft, on the `/v2` path |
+| `travel/onsen/` | `travel/onsen/vX.Y.Z` | **nested** in `travel/`: a change here moves onsen alone — the longest declared prefix wins. Both lines promoted to 1.0.0 in the same merge, each on its own commits; a `!` since took onsen to `travel/onsen/v2.0.0`, on the `/v2` path |
 | `camp/` | `camp/vX.Y.Z` | a line still in 0.x four rounds in, breaking changes included |
 
 Tags follow the Go multi-module convention (`<dir>/vX.Y.Z`), and a module is
 fetchable with `go get` at a tag only when its `go.mod` path carries that tag's
 major. glyph derives the tag and never reads a `go.mod`, so moving the path is
-the author's commit, landed before the draft is published: `haiku/go.mod` says
-`/v3` for the standing `haiku/v3.0.0` draft and `travel/onsen/go.mod` says `/v2`
-for `travel/onsen/v2.0.0`, while haiku's published v2.x tags were cut on the
+the author's commit, landed before the draft is published: `haiku/v3.0.0` and
+`travel/onsen/v2.0.0` were published on `/v3` and `/v2` paths moved first (#30,
+#32), and `go get` fetches both, while haiku's v2.x tags were cut on the
 suffix-less path and `go get` refuses them (measured 2026-09-26: "module path
 must match major version"). `go get` takes the tag's version, not the tag —
 `…/curry@v1.1.0`, never `…/curry@curry/v1.1.0`, which the go command refuses
@@ -78,6 +78,7 @@ Measured by hand rather than in e2e, because each consumes a tag or a version:
 - publish one line's draft, merge again: the published line gets a fresh draft at the next version and every other line's draft is updated under the same id (2026-09-10, `haiku/v0.1.0` then `curry/v0.0.1`).
 - GitHub's **Latest** badge lands on whichever line was published last; glyph never sets `make_latest`.
 - four rounds of twenty commits, three of them published (2026-09-11): those three rounds published 15 releases, 17 across the five lines with `haiku/v0.1.0` and `curry/v0.0.1` from the day before — first published `haiku/v0.1.0`, last `camp/v0.3.0`, highest version `haiku/v2.1.0` — and one standing draft per line on top. Each round was a single squash merge, and every line stepped on its own commits alone.
+- a line's release at major 2 or higher is fetchable only when its path move lands first (2026-09-26): `haiku/v3.0.0` and `travel/onsen/v2.0.0`, published at `9863730` after #30 and #32, resolve with `go get …/haiku/v3@v3.0.0` and `…/travel/onsen/v2@v2.0.0` — direct at once, and through the default proxy and checksum database about seven minutes after publishing (the proxy first answered 404, cached from probes made before the tags existed), and a program importing both builds and runs — while `haiku/v2.x`, published before haiku's move, resolves under no spelling. The 15 published pages that carried the old install footer (`@<the tag above>`, which the go command refuses under a module proxy) were corrected by hand the same day, and the two `haiku/v2.x` pages carry a note above the sentinel saying they cannot be fetched.
 - a hand region written **above** the sentinel survives a rewrite: written into all five standing drafts, then read back unchanged after `e2e.yml`'s drafts tier had rewritten every one of them (2026-09-11, run 34501469251).
 - the published floor is **per line**: at the frozen coordinate `release --dry-run --since-tag=camp/v0.0.0` refuses at exit 4 naming camp's own latest published release, never another line's. That is now the walk tier's arm (b2).
 - `e2e.yml`'s drafts tier runs `release` with no `--footer-file`, so a dispatch leaves every draft without the `install-notes` block until the next push to `main` writes it back (2026-09-11). Publish after a push, never straight after a dispatch.
