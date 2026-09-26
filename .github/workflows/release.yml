@@ -37,18 +37,24 @@ jobs:
         ### Install
 
         Every module here rides its own version line, so the tag above names
-        **one** module and leaves the other four where they were:
+        **one** module and leaves the other four where they were. `go get`
+        takes the module path from the table and the tag's **version** — the
+        part after the line's prefix — never the tag itself (the prefixed
+        form is refused as a disallowed version string):
 
         ```sh
-        go get github.com/akira-toriyama/glyph-monorepo-test/<module>@<the tag above>
+        # tag curry/v1.1.0
+        go get github.com/akira-toriyama/glyph-monorepo-test/curry@v1.1.0
+        # tag travel/onsen/v2.0.0
+        go get github.com/akira-toriyama/glyph-monorepo-test/travel/onsen/v2@v2.0.0
         ```
 
         | line | module path |
         |---|---|
-        | `haiku/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/haiku/v3` — from `haiku/v3.0.0`; the v2.x tags were cut without the suffix and `go get` refuses them |
+        | `haiku/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/haiku/v3` from `haiku/v3.0.0`; `…/haiku` for v0.x–v1.x. The v2.x tags were cut without the suffix and `go get` refuses them |
         | `curry/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/curry` |
         | `travel/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/travel` |
-        | `travel/onsen/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/travel/onsen` |
+        | `travel/onsen/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/travel/onsen/v2` from `travel/onsen/v2.0.0`; `…/travel/onsen` for v0.x–v1.x |
         | `camp/vX.Y.Z` | `github.com/akira-toriyama/glyph-monorepo-test/camp` |
 
         Nothing is built and nothing is uploaded — the module at its tag is the
