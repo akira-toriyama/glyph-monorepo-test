@@ -47,4 +47,23 @@ permissions:
 
 jobs:
   verdict:
-    uses: akira-toriyama/glyph/.github/workflows/pr-verdict.yml@v4.0.0
+    uses: akira-toriyama/glyph/.github/workflows/pr-verdict.yml@18650e30f224f6a1b151ae44a8e8265e570ed6e1
+    with:
+      # A SHA pin has no release binary to derive. The YAML under test reads
+      # only .level, which v4.0.0's binary already leaves empty under
+      # [[packages]].
+      glyph-version: v4.0.0
+
+  # t-xbk0 live fire, not for merge: read the reusable's outputs back.
+  read-back:
+    needs: verdict
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Read the verdict outputs back
+        env:
+          RESULT: ${{ needs.verdict.result }}
+          LEVEL: ${{ needs.verdict.outputs.level }}
+          BREAKING: ${{ needs.verdict.outputs.breaking }}
+        run: echo "t-xbk0 read-back result=[$RESULT] level=[$LEVEL] breaking=[$BREAKING]"
