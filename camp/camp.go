@@ -30,3 +30,5 @@ var list = []Item{
 func Gear() []Item {
 	return slices.Clone(list)
 }
+
+// t-xbk0 live fire: a breaking change under camp, not for merge.
