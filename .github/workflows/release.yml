@@ -39,8 +39,9 @@ jobs:
         Every module here rides its own version line, so the tag above names
         **one** module and leaves the other four where they were. `go get`
         takes the module path from the table and the tag's **version** — the
-        part after the line's prefix — never the tag itself (the prefixed
-        form is refused as a disallowed version string):
+        part after the line's prefix — never the tag itself: under a module
+        proxy, Go's default, the go command refuses the prefixed form as a
+        disallowed version string:
 
         ```sh
         # tag curry/v1.1.0
