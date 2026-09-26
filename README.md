@@ -24,8 +24,9 @@ the author's commit, landed before the draft is published: `haiku/go.mod` says
 for `travel/onsen/v2.0.0`, while haiku's published v2.x tags were cut on the
 suffix-less path and `go get` refuses them (measured 2026-09-26: "module path
 must match major version"). `go get` takes the tag's version, not the tag —
-`…/curry@v1.1.0`, never `…/curry@curry/v1.1.0`, which the proxy refuses as a
-disallowed version string.
+`…/curry@v1.1.0`, never `…/curry@curry/v1.1.0`, which the go command refuses
+as a disallowed version string under a module proxy (the default `GOPROXY`;
+only `GOPROXY=direct` would resolve it).
 Nothing is built and nothing is uploaded: publishing a line's draft is what
 cuts that line's tag, and the module at that tag is the whole artifact.
 
