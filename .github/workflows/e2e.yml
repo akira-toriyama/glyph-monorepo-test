@@ -465,8 +465,9 @@ jobs:
   #
   # Goes red if: a commit stops moving every line its files lie under, a
   # shared-only `=` starts moving a line, a shared-only `^` stops being a
-  # refusal (or the refusal stops naming both escapes), a package-named scope
-  # stops carrying a shared change, a contradicting scope stops being refused,
+  # refusal (or the refusal stops naming the escapes the commit can take), a
+  # package-named scope stops carrying a shared change, a contradicting scope
+  # under a version sigil stops being refused (or under `=` starts being one),
   # a rename across two lines stops moving both, a nested line's files leak
   # into its parent, an untagged line stops baselining at v0.0.0, or the
   # scalar verdict stops being empty in packages mode.
@@ -543,6 +544,8 @@ jobs:
           echo r4 > README.md;           c ':sparkles:(camp)^ shared change the scope places on camp'
           git checkout -q -b br-contradiction base
           echo a3 > travel/a.txt;        c ':bug:(camp)~ a travel file under a camp scope'
+          git checkout -q -b br-contradiction-none base
+          echo a4 > travel/a.txt;        c ':memo:(camp)= a travel file under a camp scope, claiming nothing'
           git checkout -q -b br-rename base
           git mv travel/a.txt camp/a.txt; c ':truck:(travel)~ move the route into camp'
           git checkout -q -b br-nested base
@@ -609,7 +612,7 @@ jobs:
           O="$RUNNER_TEMP/c2"; run_glyph "$O.out" "$O.err" lint --range base..br-shared-none
           assert_rc c-lint 0
 
-      - name: "(d) a shared-only ^ has no carrier: refused at 3 on bump AND lint, naming both escapes"
+      - name: "(d) a shared-only ^ has no carrier: refused at 3 on bump AND lint, naming the escapes it can take"
         if: ${{ !cancelled() }}
         run: |
           set -euo pipefail
@@ -619,13 +622,14 @@ jobs:
           assert_rc d-bump 3
           assert_empty_stdout d-bump "$O.json"
           assert_envelope d-bump "$O.err" 3
-          assert_says d-bump "$O.err" 'touches no declared package and its sigil ^ claims a version impact nothing can carry'
-          assert_says d-bump-escape-scope "$O.err" 'name the package in the scope (one of travel, onsen, camp)'
-          assert_says d-bump-escape-none  "$O.err" 'or write = so it moves no line'
+          assert_says d-bump "$O.err" 'its files (README.md) belong to no declared package, and its sigil ^ claims a version impact nothing can carry'
+          assert_says d-bump-escape-scope   "$O.err" 'name the line it moves in the scope (one of travel, onsen, camp)'
+          assert_says d-bump-escape-none    "$O.err" 'write = so it moves no line'
+          assert_says d-bump-escape-declare "$O.err" 'or declare the package these files belong to'
           O="$RUNNER_TEMP/d2"; run_glyph "$O.out" "$O.err" lint --range base..br-shared-minor
           assert_rc d-lint 3
           assert_envelope d-lint "$O.err" 3
-          assert_jq d-lint-detail "$O.err" '.error.details[0].detail | test("touches no declared package")'
+          assert_jq d-lint-detail "$O.err" '.error.details[0].detail | test("belong to no declared package")'
 
       - name: "(e) a package-named scope carries a shared change onto that line"
         if: ${{ !cancelled() }}
@@ -647,9 +651,27 @@ jobs:
           O="$RUNNER_TEMP/f"; run_glyph "$O.json" "$O.err" bump --range base..br-contradiction --json
           assert_rc f-bump 3
           assert_envelope f-bump "$O.err" 3
-          assert_says f-bump "$O.err" 'scope (camp) names a package this commit does not touch (its files lie under travel)'
+          assert_says f-bump "$O.err" 'scope (camp) names a line this commit does not move: travel/a.txt belongs to travel (travel)'
+          assert_says f-bump-escape "$O.err" 'write the scope of a line it moves (travel)'
           O="$RUNNER_TEMP/f2"; run_glyph "$O.out" "$O.err" lint --range base..br-contradiction
           assert_rc f-lint 3
+
+      # The same commit under `=` claims no version impact, so there is nothing
+      # for the scope to contradict: it is placed by its files and moves no
+      # line (glyph#261, DESIGN §4.1). Measured 2026-10-05: glyph 135eead
+      # refuses this arm at 3 on both commands; b42ca92 answers 1 and 0.
+      - name: "(f2) the same scope under = contradicts nothing: placed by its files, exit 1 on bump, 0 on lint"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/fixture"
+          O="$RUNNER_TEMP/f3"; run_glyph "$O.json" "$O.err" bump --range base..br-contradiction-none --json
+          assert_rc f2-bump 1
+          assert_eq f2-lines "$(jq -r '[.packages[] | "\(.path):\(.level)"] | join("|")' "$O.json")" \
+            'travel:none|travel/onsen:none|camp:none'
+          O="$RUNNER_TEMP/f4"; run_glyph "$O.out" "$O.err" lint --range base..br-contradiction-none
+          assert_rc f2-lint 0
 
       - name: "(g) a rename across two lines moves both — that is what it did"
         if: ${{ !cancelled() }}
@@ -1072,7 +1094,11 @@ jobs:
       - name: Every glyph pin site in this repository resolves to one version
         run: |
           set -euo pipefail
-          re='akira-toriyama/glyph[A-Za-z0-9._/-]*@v[0-9A-Za-z._-]*|version: *v[0-9A-Za-z._-]*'
+          # `glyph` then `/` or `@`: this repository's own modules
+          # (akira-toriyama/glyph-monorepo-test/curry@v1.1.0 in release.yml's
+          # go get lines) are not glyph pin sites, and read as ones they made
+          # this arm count three versions on a level repository.
+          re='akira-toriyama/glyph(/[A-Za-z0-9._/-]*)?@v[0-9A-Za-z._-]*|version: *v[0-9A-Za-z._-]*'
           find .github -type f -print0 | while IFS= read -r -d '' f; do
             sed 's/#.*//' "$f" | grep -nE "$re" | sed "s|^|$f:|" || true
           done
