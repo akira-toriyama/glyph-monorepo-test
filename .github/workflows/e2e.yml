@@ -810,6 +810,19 @@ jobs:
           assert_eq frozen-tags \
             "$(git -C "$RUNNER_TEMP/w" tag --list | sort | tr '\n' ' ')" \
             'camp/v0.0.0 curry/v0.0.0 curry/v0.0.1 haiku/v0.0.0 haiku/v0.1.0 travel/onsen/v0.0.0 travel/v0.0.0 '
+          # The coordinate freezes the history and the grammar, not the schema
+          # the binary under test reads them with: 380db9d's glyph.toml still
+          # carries `[commit] style`, a key no glyph ever read and glyph v6
+          # refuses as unknown (exit 2, before any walk). The one-line deletion
+          # every fleet repository made under the v5 pins is made here too, on
+          # the frozen clone's own copy: the lines and patterns the arms judge
+          # with are untouched. The line is counted before and after, so a
+          # frozen file that stopped carrying it, or a deletion that stopped
+          # working, is a red with a name rather than an arm passing for the
+          # wrong reason.
+          assert_eq frozen-style-lines "$(grep -c '^style = ' "$RUNNER_TEMP/w/glyph.toml" || true)" 1
+          sed -i '/^style = /d' "$RUNNER_TEMP/w/glyph.toml"
+          assert_eq frozen-style-lines-after "$(grep -c '^style = ' "$RUNNER_TEMP/w/glyph.toml" || true)" 0
 
       - name: "(a) a bare --since-tag walks every line from its own highest tag — and names a commit no branch holds"
         if: ${{ !cancelled() }}
