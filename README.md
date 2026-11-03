@@ -67,7 +67,6 @@ the human act that creates every other tag; glyph never tags.
 Frozen coordinates the e2e reads (never rewrite them):
 
 - #2 — a `^` under `haiku/` and a `~` under `curry/` in one squash: the two lines move differently.
-- #4 — open on purpose: the preview probe for haiku/curry.
 - #10 — a `^` under `travel/` and a `~` under `camp/` in one squash; `travel/onsen` is not mentioned.
 - #11 — a `^` under `travel/onsen/` alone: the nested line moves, its parent does not.
 - merge commit of #11 (`380db9d`): every literal in the walk tier was measured there.
