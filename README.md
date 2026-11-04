@@ -70,7 +70,7 @@ Frozen coordinates the e2e reads (never rewrite them):
 - #10 — a `^` under `travel/` and a `~` under `camp/` in one squash; `travel/onsen` is not mentioned.
 - #11 — a `^` under `travel/onsen/` alone: the nested line moves, its parent does not.
 - merge commit of #11 (`380db9d`): every literal in the walk tier was measured there.
-- the **tag landscape** as of that commit. glyph resolves a line's base with `git tag --list` and never consults reachability, so a tag cut afterwards becomes the base of a walk that starts before it and every literal collapses to `none`. The walk tier therefore clones and deletes the tags no descendant could have shown it, and asserts the surviving list as a literal (measured 2026-09-11: with `haiku/v0.2.0` and `travel/v0.1.0` planted on a descendant, arm (a) answered `haiku:v0.2.0:none|travel:v0.1.0:none`).
+- the **tag landscape** as of that commit. glyph resolves a line's base among the tags HEAD's history holds (`git tag --merged`, glyph v4.3.0 and later), so the releases cut afterwards are not that coordinate's base. The walk tier asserts the tags the coordinate's history holds as a literal and that the clone holds later releases too (until glyph had that rule it pruned the later tags by hand: measured 2026-09-11 at v3.3.0, with `haiku/v0.2.0` and `travel/v0.1.0` planted on a descendant, arm (a) answered `haiku:v0.2.0:none|travel:v0.1.0:none`).
 
 Measured by hand rather than in e2e, because each consumes a tag or a version:
 

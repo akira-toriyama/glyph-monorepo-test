@@ -19,7 +19,8 @@
 #                 no credential — path decides, scope carries what path
 #                 cannot, a shared-only sigil is a refusal, a contradiction is
 #                 a refusal, a rename moves both lines, a nested line takes its
-#                 files out of its parent, an untagged line baselines at v0.0.0
+#                 files out of its parent, an untagged line baselines at v0.0.0,
+#                 a fixup! across two lines is unlandable until autosquash folds it
 #   walk          the same rules at this repository's FROZEN coordinates, over
 #                 the API (squash-merged pulls, whose inner commits exist on no
 #                 branch); one tag converges one line alone; preview per line
@@ -39,6 +40,11 @@
 #                         downstream of the fixture ever answers — coarse, and
 #                         still the proof that these tiers reject the release
 #                         the fleet ran the day before.
+# Measured 2026-11-04 for arm (j), by hand against the binary at main (e8f912e):
+#   the preset's `unlandable` fixup rule refuses the cross-line fixup! at 3
+#   on lint and bump and, folded, moves both lines; the skip-era rule the
+#   fixture carried until then (glyph init --gemoji before v4.3.0) lints it
+#   clean and leaves camp at none — the silent miss the arm exists to catch.
 name: e2e
 
 run-name: e2e — glyph-ref=${{ inputs.glyph-ref }}
@@ -555,6 +561,14 @@ jobs:
           git checkout -q -b br-stranger base
           echo a5 > travel/a.txt; git add -A
           git commit -q -m ':bug:(travel)~ fix a route for a stranger' --author='Saleh <saleh@example.invalid>'
+          # (j) a fixup! whose files lie under ANOTHER line than its target's:
+          #     camp's change rides a travel commit's sigil only once autosquash
+          #     has folded it. Left as a git subject, the preset marks it
+          #     unlandable (glyph DESIGN §2); the skip-era rule read it as
+          #     nothing and camp stayed at none.
+          git checkout -q -b br-fixup base
+          echo a6 > travel/a.txt;        c ':sparkles:(travel)^ add a route'
+          echo c6 > camp/c.txt; git add -A; git commit -q --fixup=HEAD
           git checkout -q main
           git log --all --format='%h | %s'
 
@@ -717,6 +731,42 @@ jobs:
           assert_line i-prose "$O.md" '- :bug:(travel)~ fix a route for a stranger Saleh'
           assert_absent i-not-paged "$O.md" '@Saleh'
 
+      - name: "(j) a fixup! across two lines is unlandable — refused at 3 on lint AND bump until autosquash folds it, and then both lines move"
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          # shellcheck source=/dev/null
+          . "$ASSERT"; cd "$RUNNER_TEMP/fixture"
+          # Before the fold the fixup! is a commit of its own whose files
+          # (camp/c.txt) carry no sigil: a skip would answer for it as nothing
+          # and ship camp's change as a silent none (measured, see the header).
+          O="$RUNNER_TEMP/j"; run_glyph "$O.out" "$O.err" lint --range base..br-fixup
+          assert_rc j-lint 3
+          assert_envelope j-lint "$O.err" 3
+          assert_jq j-lint-detail "$O.err" '.error.details[0].detail | test("carry no sigil until autosquash folds it into its target")'
+          assert_jq j-lint-subject "$O.err" '.error.details[0].subject | startswith("fixup! ")'
+          O="$RUNNER_TEMP/j2"; run_glyph "$O.json" "$O.err" bump --range base..br-fixup --json
+          assert_rc j-bump 3
+          assert_empty_stdout j-bump "$O.json"
+          assert_envelope j-bump "$O.err" 3
+          assert_says j-bump-refuses "$O.err" 'refusing to version the range'
+          assert_says j-bump-remedy  "$O.err" 'rewrite it as its reason says before it lands'
+          # Folded, the target's subject — and its ^ — covers both files, so
+          # camp moves with travel; travel/onsen, untouched, stays at none.
+          git checkout -q br-fixup
+          GIT_SEQUENCE_EDITOR=: git rebase -q -i --autosquash base
+          assert_eq j-folded "$(git rev-list --count base..br-fixup)" 1
+          O="$RUNNER_TEMP/j3"; run_glyph "$O.out" "$O.err" lint --range base..br-fixup
+          assert_rc j-lint-folded 0
+          O="$RUNNER_TEMP/j4"; run_glyph "$O.json" "$O.err" bump --range base..br-fixup --json
+          assert_rc j-bump-folded 0
+          assert_eq j-folded-lines "$(jq -r '[.packages[] | "\(.path):\(.level):\(.next // "-")"] | join("|")' "$O.json")" \
+            'travel:minor:v0.1.0|travel/onsen:none:-|camp:minor:v0.1.0'
+          O="$RUNNER_TEMP/j5"; run_glyph "$O.out" "$O.err" bump --range base..br-fixup
+          assert_rc j-folded-stdout 0
+          assert_eq j-folded-tags "$(tr '\n' '|' < "$O.out")" 'travel/v0.1.0|camp/v0.1.0|'
+          git checkout -q main
+
   # ── walk ──────────────────────────────────────────────────────────────────
   # The same rules over the API, at this repository's FROZEN coordinate: the
   # merge commit of #11, where every line's draft was measured standing
@@ -782,34 +832,32 @@ jobs:
             git rev-parse "$t^{commit}" > /dev/null
           done
           # A COORDINATE IS A COMMIT *AND* THE TAG LANDSCAPE IT COULD SEE.
-          # glyph resolves a line's base with `git tag --list` — every tag the
-          # clone holds, reachability never consulted (gitsource.Tags, read by
-          # sincetag.go's latestVersionTag) — so a release cut AFTER this
-          # coordinate becomes the base of a walk that starts BEFORE it, and
-          # every literal below collapses to "none" with nothing on stderr.
-          # Measured 2026-09-11 at v3.3.0, planting haiku/v0.2.0 and
-          # travel/v0.1.0 on a descendant of $FROZEN: arm (a) answered
-          # `haiku:v0.2.0:none|…|travel:v0.1.0:none` where it wants
-          # `haiku:v0.1.0:patch|…|travel:v0.0.0:minor`.
+          # glyph resolves a line's base among the tags HEAD's history holds
+          # (`git tag --merged`, DESIGN §4 — D3a, glyph v4.3.0), so the
+          # releases cut after this coordinate, which the clone below holds
+          # whole, are not its base. Until glyph had that rule this step
+          # pruned `git tag --no-merged "$FROZEN"` by hand (#15): at v3.3.0,
+          # with haiku/v0.2.0 and travel/v0.1.0 planted on a descendant, arm
+          # (a) answered `haiku:v0.2.0:none|…|travel:v0.1.0:none` where it
+          # wants `haiku:v0.1.0:patch|…|travel:v0.0.0:minor` (measured
+          # 2026-09-11). The prune is gone so that the rule itself is what
+          # the arms below exercise.
           #
-          # So the frozen checkout is a SEPARATE clone whose tags are pruned
-          # back to the ones this coordinate could see. It is not a worktree:
-          # tag refs are shared across worktrees, and deleting them there would
-          # reach the `repo` checkout the live-main step below still needs
-          # whole.
+          # The frozen checkout is still a SEPARATE clone: the frozen-config
+          # edit below must not reach the `repo` checkout the live-main step
+          # still needs whole.
           git clone -q --no-hardlinks . "$RUNNER_TEMP/w"
           git -C "$RUNNER_TEMP/w" checkout -q --detach "$FROZEN"
-          git -C "$RUNNER_TEMP/w" tag --no-merged "$FROZEN" | while read -r t; do
-            git -C "$RUNNER_TEMP/w" tag -d "$t" > /dev/null
-          done
           assert_eq worktree-head "$(git -C "$RUNNER_TEMP/w" rev-parse --short HEAD)" "$FROZEN"
-          # The positive control for the pruning: the landscape is asserted as a
-          # literal, so a prune that silently stopped working reds here rather
-          # than turning every arm below into a vacuous "none". A tag cut later
-          # on an ANCESTOR of $FROZEN belongs in this list and is a real red.
+          # The positive control, both halves: the tags this coordinate's
+          # history holds are asserted as a literal — a tag cut later on an
+          # ANCESTOR of $FROZEN belongs in this list and is a real red — and
+          # the clone is asserted to hold a later release too, so an arm that
+          # went green over a landscape with nothing to ignore proves nothing.
           assert_eq frozen-tags \
-            "$(git -C "$RUNNER_TEMP/w" tag --list | sort | tr '\n' ' ')" \
+            "$(git -C "$RUNNER_TEMP/w" tag --merged "$FROZEN" | sort | tr '\n' ' ')" \
             'camp/v0.0.0 curry/v0.0.0 curry/v0.0.1 haiku/v0.0.0 haiku/v0.1.0 travel/onsen/v0.0.0 travel/v0.0.0 '
+          assert_eq later-tags-present "$(git -C "$RUNNER_TEMP/w" tag --list 'haiku/v3.0.0' 'camp/v0.3.0' | sort | tr '\n' ' ')" 'camp/v0.3.0 haiku/v3.0.0 '
           # The coordinate freezes the history and the grammar, not the schema
           # the binary under test reads them with: 380db9d's glyph.toml still
           # carries `[commit] style`, a key no glyph ever read and glyph v6
